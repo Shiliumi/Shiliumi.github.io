@@ -26,10 +26,10 @@ monthFormat: "2006-01"
 dateFormat: "2006-01-02"
 timeFormat: "2006-01-02 15:04:05"
 
-author: D-Sketon
-email: xxx@example.com
-description: "少女祈祷中..."
-subtitle: "少女祈祷中..."
+author: 翟小翟
+email: zhaishao@example.com
+description: "热爱技术与生活，用代码记录世界 | 技術と人生を愛し、コードで世界を記録 | Love tech & life, coding the world"
+subtitle: "翟小翟的个人博客 - 技术·生活·分享"
 
 banner: "images/banner.webp"
 # You can also write it in the form of the following url

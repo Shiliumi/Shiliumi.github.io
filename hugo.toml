@@ -1,6 +1,6 @@
 baseURL = 'https://shiliumi.github.io/'
 languageCode = 'zh-CN'
-title = 'Shiliumi的个人博客'
+title = '翟小翟的个人博客'
 theme = 'hugo-theme-reimu-0.12.1'
 defaultContentLanguage = 'zh-CN'
 
