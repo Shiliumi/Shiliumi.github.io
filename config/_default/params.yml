@@ -97,11 +97,57 @@ injector:
         right: 0 !important;
       }
       
-      /* 音乐播放器样式优化 */
+      /* 音乐播放器专栏样式设计 */
       #aplayer {
         margin-bottom: 20px !important;
-        border-radius: 8px !important;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 20px rgba(255, 117, 117, 0.3) !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(10px) !important;
+        border: 2px solid rgba(255, 117, 117, 0.2) !important;
+        overflow: hidden !important;
+      }
+      
+      /* 音乐播放器内部样式优化 */
+      #aplayer .aplayer-info {
+        padding: 15px 20px !important;
+        background: linear-gradient(135deg, rgba(255, 117, 117, 0.1), rgba(255, 182, 193, 0.1)) !important;
+      }
+      
+      #aplayer .aplayer-controller {
+        background: rgba(255, 117, 117, 0.05) !important;
+        padding: 10px 20px !important;
+      }
+      
+      #aplayer .aplayer-list {
+        max-height: 200px !important;
+        background: rgba(255, 255, 255, 0.98) !important;
+      }
+      
+      /* 播放按钮样式 */
+      #aplayer .aplayer-controller .aplayer-bar-wrap .aplayer-bar .aplayer-loaded {
+        background: linear-gradient(90deg, #ff7575, #ffb6c1) !important;
+      }
+      
+      #aplayer .aplayer-controller .aplayer-bar-wrap .aplayer-bar .aplayer-played {
+        background: #ff7575 !important;
+      }
+      
+      /* 暗黑模式适配 */
+      @media (prefers-color-scheme: dark) {
+        #aplayer {
+          background: rgba(0, 0, 0, 0.8) !important;
+          border-color: rgba(255, 117, 117, 0.3) !important;
+        }
+        
+        #aplayer .aplayer-info {
+          background: linear-gradient(135deg, rgba(255, 117, 117, 0.2), rgba(255, 182, 193, 0.1)) !important;
+        }
+        
+        #aplayer .aplayer-list {
+          background: rgba(0, 0, 0, 0.9) !important;
+          color: #fff !important;
+        }
       }
       
       /* 自定义看板娘样式 - 固定在左下角，避免与音乐播放器冲突 */
@@ -117,8 +163,15 @@ injector:
       
       /* 确保看板娘不与左侧内容重叠 */
       .sidebar-left #sakana-widget {
-        left: 20px !important;
+        left: 350px !important; /* 避开左侧边栏和音乐播放器 */
         z-index: 1000 !important;
+      }
+      
+      /* 在较小屏幕上调整看板娘位置 */
+      @media (max-width: 1200px) {
+        .sidebar-left #sakana-widget {
+          left: 20px !important; /* 小屏幕时回到左下角 */
+        }
       }
       
       /* 响应式设计 - 在小屏幕上调整大小和位置 */
@@ -735,10 +788,10 @@ player:
     enable: true
     meting_api: # custom api
     options:
-      id: 2265921590 # 网易云音乐播放列表ID
+      id: 2829816518 # 二次元动漫主题曲精选播放列表
       server: netease
       type: playlist
-      auto: https://music.163.com/#/playlist?id=2265921590
+      auto: https://music.163.com/#/playlist?id=2829816518
 
 ########################################
 # pangu.js
