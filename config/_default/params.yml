@@ -435,10 +435,10 @@ giscus:
 ########################################
 
 algolia_search:
-  enable: false
-  appID:
-  apiKey:
-  indexName:
+  enable: true
+  appID: "demo_app_id"  # 这是演示用的配置，实际使用需要注册Algolia
+  apiKey: "demo_api_key"  # 实际使用时需要替换为真实的Search-Only Key
+  indexName: "demo_index"  # 实际使用时需要替换为真实的索引名
   hits:
     per_page: 10
 
