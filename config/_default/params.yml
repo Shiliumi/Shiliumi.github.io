@@ -76,9 +76,72 @@ excerpt_link: Read More
 # Make sure your code snippet is safeHTML
 injector:
   head_begin: # Inject code snippet right after <head>
-  head_end: # Inject code snippet right before </head>
+  head_end: | # Inject code snippet right before </head>
+    <!-- Sakana Widget CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sakana-widget@2.7.1/lib/sakana.min.css">
+    <style>
+      /* 自定义看板娘样式 - 固定在左下角 */
+      #sakana-widget {
+        position: fixed !important;
+        bottom: 20px !important;
+        left: 20px !important;
+        z-index: 999 !important;
+        width: 150px !important;
+        height: 150px !important;
+        pointer-events: auto !important;
+      }
+      /* 响应式设计 - 在小屏幕上调整大小 */
+      @media (max-width: 768px) {
+        #sakana-widget {
+          width: 120px !important;
+          height: 120px !important;
+          bottom: 10px !important;
+          left: 10px !important;
+        }
+      }
+    </style>
   body_begin: # Inject code snippet right after <body>
-  body_end: # Inject code snippet right before </body>
+  body_end: | # Inject code snippet right before </body>
+    <!-- Sakana Widget Container -->
+    <div id="sakana-widget"></div>
+    <!-- Sakana Widget JavaScript -->
+    <script>
+      function initSakanaWidget() {
+        try {
+          // 创建看板娘实例，使用自定义配置
+          new SakanaWidget({
+            size: 150,
+            autoFit: true,
+            character: 'chisato', // 默认角色为千束
+            controls: true, // 显示控制栏
+            rod: true, // 显示弹簧杆
+            draggable: true, // 允许拖拽
+            stroke: {
+              color: '#ff7575', // 弹簧颜色，与博客主题色调一致
+              width: 8
+            },
+            threshold: 0.1,
+            rotate: 0,
+            title: true // 启用无障碍功能
+          })
+          .setState({
+            i: 0.08, // 惯性
+            s: 0.1,  // 粘性
+            d: 0.99  // 衰减
+          })
+          .mount('#sakana-widget');
+          
+          console.log('🐟 Sakana Widget 加载成功！');
+        } catch (error) {
+          console.error('Sakana Widget 加载失败:', error);
+        }
+      }
+    </script>
+    <script
+      async
+      onload="initSakanaWidget()"
+      src="https://cdn.jsdelivr.net/npm/sakana-widget@2.7.1/lib/sakana.min.js"
+    ></script>
   sidebar_begin: # Inject code snippet right after <aside>
   sidebar_end: # Inject code snippet right before </aside>
 
