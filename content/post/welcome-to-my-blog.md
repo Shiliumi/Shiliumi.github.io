@@ -4,7 +4,7 @@ date: 2024-08-29T21:00:00+08:00
 draft: false
 categories: ["随笔", "エッセイ", "Essay"]
 tags: ["博客介绍", "ブログ紹介", "Blog Introduction", "多语言", "多言語", "Multilingual"]
-
+cover: "rgb(255,117,117)"
 ---
 
 ## 中文 🇨🇳
