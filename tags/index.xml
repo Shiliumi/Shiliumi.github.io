@@ -2,10 +2,35 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
         <title>Tags on 翟小翟</title>
-        <link>http://localhost:1313/tags/</link>
+        <link>https://Shiliumi.github.io/tags/</link>
         <description>Recent content in Tags on 翟小翟</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>zh-cn</language>
-        <copyright>翟小翟-Blog</copyright><atom:link href="http://localhost:1313/tags/index.xml" rel="self" type="application/rss+xml" />
+        <copyright>翟小翟-Blog</copyright>
+        <lastBuildDate>Sat, 13 Sep 2025 13:42:44 +0800</lastBuildDate><atom:link href="https://Shiliumi.github.io/tags/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>Hugo</title>
+        <link>https://Shiliumi.github.io/tags/hugo/</link>
+        <pubDate>Sat, 13 Sep 2025 13:42:44 +0800</pubDate>
+        
+        <guid>https://Shiliumi.github.io/tags/hugo/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>教程</title>
+        <link>https://Shiliumi.github.io/tags/%E6%95%99%E7%A8%8B/</link>
+        <pubDate>Sat, 13 Sep 2025 13:42:44 +0800</pubDate>
+        
+        <guid>https://Shiliumi.github.io/tags/%E6%95%99%E7%A8%8B/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>音乐播放器</title>
+        <link>https://Shiliumi.github.io/tags/%E9%9F%B3%E4%B9%90%E6%92%AD%E6%94%BE%E5%99%A8/</link>
+        <pubDate>Sat, 13 Sep 2025 13:42:44 +0800</pubDate>
+        
+        <guid>https://Shiliumi.github.io/tags/%E9%9F%B3%E4%B9%90%E6%92%AD%E6%94%BE%E5%99%A8/</guid>
+        <description></description>
+        </item>
+        
     </channel>
 </rss>

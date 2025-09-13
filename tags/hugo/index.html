@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html lang="zh-cn" dir="ltr">
-    <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset='utf-8'>
+    <head><meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content="欢迎来到我的个人博客，此博客由【Hugo+Stack】进行构建，主要分享个人生活和学习笔记">
 <title>Tag: Hugo - 翟小翟</title>
 
-<link rel='canonical' href='http://localhost:1313/tags/hugo/'>
+<link rel='canonical' href='https://Shiliumi.github.io/tags/hugo/'>
 
-<link rel="stylesheet" href="/scss/style.min.663803bebe609202d5b39d848f2d7c2dc8b598a2d879efa079fa88893d29c49c.css"><meta property='og:title' content="Tag: Hugo - 翟小翟">
+<link rel="stylesheet" href="/scss/style.min.b8787627db91d539519fbc1febe3f5c27c7fc9b892645c84cb88db449a5c5d62.css"><meta property='og:title' content="Tag: Hugo - 翟小翟">
 <meta property='og:description' content="欢迎来到我的个人博客，此博客由【Hugo+Stack】进行构建，主要分享个人生活和学习笔记">
-<meta property='og:url' content='http://localhost:1313/tags/hugo/'>
+<meta property='og:url' content='https://Shiliumi.github.io/tags/hugo/'>
 <meta property='og:site_name' content='翟小翟'>
 <meta property='og:type' content='website'><meta property='og:updated_time' content=' 2025-09-13T13:42:44&#43;08:00 '/>
 <meta name="twitter:title" content="Tag: Hugo - 翟小翟">
-<meta name="twitter:description" content="欢迎来到我的个人博客，此博客由【Hugo+Stack】进行构建，主要分享个人生活和学习笔记"><link rel="alternate" type="application/rss&#43;xml" href="http://localhost:1313/tags/hugo/index.xml">
+<meta name="twitter:description" content="欢迎来到我的个人博客，此博客由【Hugo+Stack】进行构建，主要分享个人生活和学习笔记"><link rel="alternate" type="application/rss&#43;xml" href="https://Shiliumi.github.io/tags/hugo/index.xml">
     <link rel="shortcut icon" href="/favicon.ico" />
 
     </head>
@@ -225,9 +225,9 @@
 
                             <select name="language" title="language" onchange="window.location.href = this.selectedOptions[0].value">
                                 
-                                    <option value="http://localhost:1313/en/" >English</option>
+                                    <option value="https://Shiliumi.github.io/en/" >English</option>
                                 
-                                    <option value="http://localhost:1313/" selected>简体中文</option>
+                                    <option value="https://Shiliumi.github.io/" selected>简体中文</option>
                                 
                             </select>
                         </li>
@@ -400,18 +400,18 @@
     <section class="article-list--compact">
         
             <article>
-    <a href="/p/0913-aplayer_pjax/">
+    <a href="/p/0913-aplayer/">
         <div class="article-details">
-            <h2 class="article-title">APlayer&#43;PJAX引入音乐播放器并实现音乐不中断</h2>
+            <h2 class="article-title">APlayer &amp; MetingJS&#43;PJAX引入音乐播放器</h2>
             <footer class="article-time">
                 <time datetime='2025-09-13T13:42:44&#43;08:00'>2025-09-13</time>
             </footer>
         </div>
             <div class="article-image">
-                <img src="/p/0913-aplayer_pjax/cover_hu_a75677b917af0393.jpg" 
+                <img src="/p/0913-aplayer/cover_hu_a75677b917af0393.jpg" 
                         width="120"
                         height="120" 
-                        alt="APlayer&#43;PJAX引入音乐播放器并实现音乐不中断"
+                        alt="APlayer &amp; MetingJS&#43;PJAX引入音乐播放器"
                         loading="lazy">
                 
             </div>
@@ -440,7 +440,7 @@
                 src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
                 
                 >
-            </script><script type="text/javascript" src="/ts/main.36cc1fbe3488edef9adef3ae4d9f2e5c2625b3eaa6b4176fd95c2ce3c2c12c26.js" defer></script>
+            </script><script type="text/javascript" src="/ts/main.1e9a3bafd846ced4c345d084b355fb8c7bae75701c338f8a1f8a82c780137826.js" defer></script>
 <script>
     (function () {
         const customFont = document.createElement('link');
@@ -452,27 +452,19 @@
         document.head.appendChild(customFont);
     }());
 </script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css">
-<script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
 
 
-<meting-js
-	server="netease"
-	type="playlist"
-	id="2511154"
-    list-folded="true"
-    mini="false"
+<script src="https://cdn.bootcss.com/aplayer/1.10.1/APlayer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/meting@2.0.1/dist/Meting.min.js"></script>
+
+<meting-js 
+    server="netease" 
+    type="playlist" 
+    id="2511154"
     fixed="true"
-    autoplay="false"
-    loop="all"
     order="list"
-    preload="auto"
-    list-max-height="500px"
-    lrc-type="1"
-    >
-</meting-js>
-
+    loop="all"
+    volume="0.5"
+></meting-js>
     </body>
 </html>
