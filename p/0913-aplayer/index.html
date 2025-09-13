@@ -573,6 +573,8 @@
         });})
 </script>
 
+<div class="math-katex"></div>
+
     
 </article>
 
@@ -725,7 +727,7 @@
                 src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
                 
                 >
-            </script><script type="text/javascript" src="/ts/main.1e9a3bafd846ced4c345d084b355fb8c7bae75701c338f8a1f8a82c780137826.js" defer></script>
+            </script><script type="text/javascript" src="/ts/main.99ce1801c4bad426a42fc436add4721e149159dbb598636e9578fd59cf778c83.js" defer></script>
 <script>
     (function () {
         const customFont = document.createElement('link');
@@ -751,5 +753,160 @@
     loop="all"
     volume="0.5"
 ></meting-js>
+
+
+<script src="https://cdn.jsdelivr.net/npm/pjax/pjax.min.js"></script>
+
+
+    
+    <script src="https://Shiliumi.github.io/js/topbar.min.js"></script>
+
+
+<script>
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        var pjax = new Pjax({
+            selectors: [
+                ".main-container"
+            ]
+        });
+
+        
+        if (typeof topbar !== 'undefined') {
+            
+            topbar.config({
+                autoRun: true,        
+                barThickness: 3,      
+                barColors: {
+                    '0': 'rgba(255, 255, 255, 1)',    
+                    '0.3': 'rgba(52, 152, 219, 1)',   
+                    '0.7': 'rgba(241, 196, 15, 1)',   
+                    '1.0': 'rgba(0, 149, 234, 1)'     
+                },
+                shadowBlur: 10,
+                shadowColor: 'rgba(0, 0, 0, 0.6)'
+            });
+
+            
+            document.addEventListener('pjax:send', function() {
+                console.log('PJAX: 开始加载页面，显示进度条');
+                topbar.show();
+                
+                
+                setTimeout(function() { topbar.progress(0.3); }, 200);
+                setTimeout(function() { topbar.progress(0.6); }, 400);
+                setTimeout(function() { topbar.progress(0.8); }, 600);
+            });
+
+            
+            document.addEventListener('pjax:complete', function() {
+                console.log('PJAX: 页面加载完成，准备隐藏进度条');
+                
+                
+                topbar.progress(1.0);
+                
+                
+                setTimeout(function() {
+                    
+                    if (window.Stack && window.Stack.init) {
+                        window.Stack.init();
+                    }
+                    
+                    topbar.hide();
+                    console.log('PJAX: 进度条已隐藏');
+                }, 800); 
+            });
+
+            
+            document.addEventListener('pjax:error', function() {
+                console.log('PJAX: 页面加载失败，准备隐藏进度条');
+                setTimeout(function() {
+                    topbar.hide();
+                    console.log('PJAX: 进度条已隐藏（错误）');
+                }, 500); 
+            });
+        } else {
+            console.error('Topbar library not loaded');
+        }
+
+        
+        if (pjax) {
+            pjax._handleResponse = pjax.handleResponse;
+            pjax.handleResponse = function(responseText, request, href, options) {
+                if (request.responseText.match("<html")) {
+                    if (responseText) {
+                        
+                        let newDom = new DOMParser().parseFromString(responseText, 'text/html');
+                        
+                        let bodyClass = newDom.body.className;
+                        document.body.setAttribute("class", bodyClass);
+                    }
+                    
+                    pjax._handleResponse(responseText, request, href, options);
+                    setTimeout(() => {
+                        pjax._handleResponse(responseText, request, href, options);
+                    }, 1000);
+                } else {
+                    
+                    console.warn('PJAX: 收到非HTML响应');
+                }
+            };
+        }
+        
+        if (typeof topbar !== 'undefined') {
+            
+            window.addEventListener('beforeunload', function() {
+                topbar.show();
+            });
+            
+            
+            window.addEventListener('load', function() {
+                setTimeout(function() {
+                    topbar.hide();
+                }, 1000);
+            });
+        }
+    });
+</script>
+
+
+
+<script>
+    async function renderKaTeX() {
+        
+        let katex = document.querySelector(".math-katex");
+        if (!katex) {
+            return;
+        }
+        
+        while (typeof renderMathInElement !== 'function') {
+            await delay(500);
+        }        
+        
+        renderMathInElement(document.body, {
+            delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true }
+            ],
+            ignoredClasses: ["gist"]
+        });
+    }
+    
+    
+
+    function delay(time) {
+        return new Promise(resolve => {
+            setTimeout(resolve, time)
+        })
+    }
+
+    document.addEventListener('pjax:complete', () => {
+        renderKaTeX();
+    })
+</script>
+
     </body>
 </html>
