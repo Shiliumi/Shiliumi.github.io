@@ -156,9 +156,9 @@
 &lt;li&gt;（1）通过阅读Stack主题的源码可以看到，主题样式的切换是通过&lt;code&gt;[data-scheme=&amp;quot;light/darck&amp;quot;] {...}&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;（2）所有我们可以准备两种Aplayer的css，用&lt;code&gt;[data-scheme=&amp;quot;light&amp;quot;]{ 亮的css样式 }&lt;/code&gt;包裹亮的，用&lt;code&gt;[data-scheme=&amp;quot;dark&amp;quot;]{ 暗的css样式 }&lt;/code&gt;包裹暗的，这里直接给各位准备好了
 &lt;ul&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://shiliumi.github.io/custom-player/aplayer-dark.scss&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://shiliumi.github.io/p/0913-aplayer/aplayer-dark.scss&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
     &gt;aplayer-dark.scss&lt;/a&gt;（Ctrl+S保存）&lt;/li&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://shiliumi.github.io/custom-player/aplayer-light.scss&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://shiliumi.github.io/p/0913-aplayer/aplayer-light.scss&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
     &gt;aplayer-light.scss&lt;/a&gt;（Ctrl+S保存）&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
