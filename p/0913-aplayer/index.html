@@ -6,11 +6,11 @@
 
 <link rel='canonical' href='https://Shiliumi.github.io/p/0913-aplayer/'>
 
-<link rel="stylesheet" href="/scss/style.min.b8787627db91d539519fbc1febe3f5c27c7fc9b892645c84cb88db449a5c5d62.css"><meta property='og:title' content="APlayer & MetingJS+PJAX引入音乐播放器">
+<link rel="stylesheet" href="/scss/style.min.bd2f6535ce30dfe77b213e1798b22410721829309efbbc3efc3f0844289349fd.css"><meta property='og:title' content="APlayer & MetingJS+PJAX引入音乐播放器">
 <meta property='og:description' content="通过Aplayer & MetingJS 引入音乐播放器">
 <meta property='og:url' content='https://Shiliumi.github.io/p/0913-aplayer/'>
 <meta property='og:site_name' content='翟小翟'>
-<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='教程' /><meta property='article:tag' content='Hugo' /><meta property='article:tag' content='音乐播放器' /><meta property='article:published_time' content='2025-09-13T13:42:44&#43;08:00'/><meta property='article:modified_time' content='2025-09-13T13:42:44&#43;08:00'/><meta property='og:image' content='https://Shiliumi.github.io/p/0913-aplayer/cover.jpg' />
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='教程' /><meta property='article:tag' content='Hugo' /><meta property='article:tag' content='音乐播放器' /><meta property='article:published_time' content='2025-09-13T13:42:44&#43;08:00'/><meta property='article:modified_time' content='2025-09-15T00:41:44&#43;08:00'/><meta property='og:image' content='https://Shiliumi.github.io/p/0913-aplayer/cover.jpg' />
 <meta name="twitter:title" content="APlayer & MetingJS+PJAX引入音乐播放器">
 <meta name="twitter:description" content="通过Aplayer & MetingJS 引入音乐播放器"><meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:image" content='https://Shiliumi.github.io/p/0913-aplayer/cover.jpg' />
@@ -93,7 +93,7 @@
             
                 <li>
                     <a 
-                        href='https://github.com/CaiJimmy/hugo-theme-stack'
+                        href='https://github.com/Shiliumi'
                         target="_blank"
                         title="GitHub"
                         rel="me"
@@ -263,7 +263,39 @@
     </ol>
 </aside>
 
-    
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+    <section class="widget archives">
+        <div class="widget-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <line x1="5" y1="9" x2="19" y2="9" />
+  <line x1="5" y1="15" x2="19" y2="15" />
+  <line x1="11" y1="4" x2="7" y2="20" />
+  <line x1="17" y1="4" x2="13" y2="20" />
+</svg>
+
+
+
+        </div>
+        <h2 class="widget-title section-title">目录</h2>
+        
+        <div class="widget--toc">
+            <nav id="TableOfContents">
+  <ul>
+    <li><a href="#1-引入音乐播放器">1 引入音乐播放器</a></li>
+    <li><a href="#2-音乐播放器样式切换">2 音乐播放器样式切换</a></li>
+  </ul>
+</nav>
+        </div>
+    </section>
+
+            
+        
+    </aside>
+
 
             <main class="main full-width">
     <article class="has-image main-article">
@@ -328,7 +360,19 @@
             </div>
         
 
-        
+        <div class="article-lastmod">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+                <time>
+                    2025-09-15 00:41 &#43;0800
+                </time>
+            </div>
     </footer>
     
 
@@ -382,24 +426,24 @@
 </span><span class="lnt">14
 </span></code></pre></td>
 <td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-gdscript3" data-lang="gdscript3"><span class="line"><span class="cl"><span class="o">&lt;</span><span class="n">div</span> <span class="n">id</span><span class="o">=</span><span class="s2">&#34;aplayer01&#34;</span><span class="o">&gt;&lt;/</span><span class="n">div</span><span class="o">&gt;</span>
-</span></span><span class="line"><span class="cl"><span class="o">&lt;</span><span class="n">script</span> <span class="n">type</span><span class="o">=</span><span class="s2">&#34;text/javascript&#34;</span><span class="o">&gt;</span>
-</span></span><span class="line"><span class="cl">    <span class="k">const</span> <span class="n">ap</span> <span class="o">=</span> <span class="n">new</span> <span class="n">APlayer</span><span class="p">({</span>
-</span></span><span class="line"><span class="cl">　　　　  <span class="o">//</span><span class="err">定义容器</span>
-</span></span><span class="line"><span class="cl">        <span class="n">container</span><span class="p">:</span> <span class="n">document</span><span class="o">.</span><span class="n">getElementById</span><span class="p">(</span><span class="s1">&#39;aplayer01&#39;</span><span class="p">),</span>
-</span></span><span class="line"><span class="cl">　　　　 <span class="o">//</span><span class="err">关于音频的相关参数：</span>
-</span></span><span class="line"><span class="cl">        <span class="n">audio</span><span class="p">:</span> <span class="p">[{</span>
-</span></span><span class="line"><span class="cl">            <span class="n">name</span><span class="p">:</span> <span class="s1">&#39;碧い瞳のエリス&#39;</span><span class="p">,</span><span class="o">//</span><span class="err">音频名称</span>
-</span></span><span class="line"><span class="cl">            <span class="n">artist</span><span class="p">:</span> <span class="s1">&#39;安全地帯&#39;</span><span class="p">,</span><span class="o">//</span><span class="err">艺术家</span>
-</span></span><span class="line"><span class="cl">            <span class="n">url</span><span class="p">:</span> <span class="s1">&#39;https://doge.ottoli.cn/安全地帯 - 碧い瞳のエリス.mp3&#39;</span><span class="p">,</span><span class="o">//</span><span class="err">文件地址</span>
-</span></span><span class="line"><span class="cl">            <span class="n">cover</span><span class="p">:</span> <span class="s1">&#39;https://doge.ottoli.cn/aqdd.jpg&#39;</span><span class="o">//</span><span class="err">封面地址</span>
-</span></span><span class="line"><span class="cl">        <span class="p">}]</span>
+<pre tabindex="0" class="chroma"><code class="language-html" data-lang="html"><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">div</span> <span class="na">id</span><span class="o">=</span><span class="s">&#34;aplayer01&#34;</span><span class="p">&gt;&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">script</span> <span class="na">type</span><span class="o">=</span><span class="s">&#34;text/javascript&#34;</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="kr">const</span> <span class="nx">ap</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">APlayer</span><span class="p">({</span>
+</span></span><span class="line"><span class="cl">　　　　  <span class="c1">//定义容器
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nx">container</span><span class="o">:</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;aplayer01&#39;</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">　　　　 <span class="c1">//关于音频的相关参数：
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nx">audio</span><span class="o">:</span> <span class="p">[{</span>
+</span></span><span class="line"><span class="cl">            <span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;碧い瞳のエリス&#39;</span><span class="p">,</span><span class="c1">//音频名称
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="nx">artist</span><span class="o">:</span> <span class="s1">&#39;安全地帯&#39;</span><span class="p">,</span><span class="c1">//艺术家
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="nx">url</span><span class="o">:</span> <span class="s1">&#39;https://doge.ottoli.cn/安全地帯 - 碧い瞳のエリス.mp3&#39;</span><span class="p">,</span><span class="c1">//文件地址
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="nx">cover</span><span class="o">:</span> <span class="s1">&#39;https://doge.ottoli.cn/aqdd.jpg&#39;</span><span class="c1">//封面地址
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="p">}]</span>
 </span></span><span class="line"><span class="cl">    <span class="p">});</span>
-</span></span><span class="line"><span class="cl"><span class="o">&lt;/</span><span class="n">script</span><span class="o">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
 </span></span></code></pre></td></tr></table>
 </div>
-</div><blockquote>
-<p>更多用法请参考：<a class="link" href="https://aplayer.js.org/#/zh-Hans/?id=%e5%8f%82%e6%95%b0"  target="_blank" rel="noopener"
+</div><blockquote class="alert alert-tip">
+    <p>更多用法请考：<a class="link" href="https://aplayer.js.org/#/zh-Hans/?id=%e5%8f%82%e6%95%b0"  target="_blank" rel="noopener"
     >APlayer官方文档</a></p></blockquote>
 <ul>
 <li>（4）APlayer 原生用法设置参数十分繁琐，而且只能调用音频文件直链，增加服务器开销。而使用 MetingJS 就很好地解决了这个问题。一个MetingJS播放器至少需要三个参数：</li>
@@ -411,7 +455,7 @@
 </span><span class="lnt">3
 </span></code></pre></td>
 <td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">id=&#39;外链播放器id&#39;,必须参数,Id
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">id=&#39;外链播放器id&#39;,必须参数,Id
 </span></span><span class="line"><span class="cl">type=[song=单曲, playlist=歌单, album=专辑, search=搜索结果, artist=艺术家],必须参数,调用类型
 </span></span><span class="line"><span class="cl">server=[netease=网易云音乐, tencent=QQ音乐, kugou=酷狗音乐, xiami=虾米音乐, baidu=百度音乐],必须参数,调用的API
 </span></span></code></pre></td></tr></table>
@@ -424,7 +468,7 @@
 </span><span class="lnt">3
 </span></code></pre></td>
 <td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">fixed = 启用固定模式，固定在左下角,默认false
+<pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">fixed = 启用固定模式，固定在左下角,默认false
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl">mini = 启用迷你模式,默认false
 </span></span></code></pre></td></tr></table>
@@ -472,8 +516,8 @@
 </span></span><span class="line"><span class="cl"><span class="o">--&gt;</span>
 </span></span></code></pre></td></tr></table>
 </div>
-</div><blockquote>
-<p>更多请参考：<a class="link" href="https://github.com/metowolf/MetingJS#option"  target="_blank" rel="noopener"
+</div><blockquote class="alert alert-tip">
+    <p>更多请参考：<a class="link" href="https://github.com/metowolf/MetingJS#option"  target="_blank" rel="noopener"
     >MetingJS官方文档</a></p></blockquote>
 <hr>
 <h1 id="2-音乐播放器样式切换">2 音乐播放器样式切换
@@ -512,8 +556,8 @@
 <li>（5）既然音乐播放器的css已经被我们改为从本地文件引入，那么<strong>custom.html</strong>中的link标签就可以注释或者删掉了</li>
 </ul>
 <img src="./images/img2.png" alt="播放器展示" style="width: 70%; height: auto;">
-<blockquote>
-<p>至此样式随主题切换就已经完成了</p></blockquote>
+<blockquote class="alert alert-note">
+    <p>至此样式随主题切换就已经完成了</p></blockquote>
 <hr>
 
 </section>
@@ -544,7 +588,19 @@
 
         <span>Licensed under CC BY-NC-SA 4.0</span>
     </section>
-    </footer>
+    <section class="article-lastmod">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+        <span>
+            最后更新于 2025-09-15 00:41 &#43;0800
+        </span>
+    </section></footer>
 
 
     
@@ -581,6 +637,39 @@
     
 
     
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">相关文章</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="has-image">
+    <a href="/p/0914-stack_theme_custom/">
+        
+        
+            <div class="article-image">
+                <img src="/p/0914-stack_theme_custom/cover.082f402bad242eb8de9be50951b3bad0_hu_93fb7cc9cabf5f56.jpg" 
+                        width="250" 
+                        height="150" 
+                        loading="lazy"
+                        alt="Featured image of post 【Hugo】Stack主题自定义修改"
+                        data-key="0914 Stack_Theme_Custom" 
+                        data-hash="md5-CC9AK60kLrjem&#43;UJUbO60A==">
+                
+            </div>
+        
+
+        <div class="article-details">
+            <h2 class="article-title">【Hugo】Stack主题自定义修改</h2>
+        </div>
+    </a>
+</article>
+
+            
+        </div>
+    </div>
+</aside>
 
      
     
@@ -867,6 +956,7 @@
 </script>
 
 <script>
+  
   const cdnPath = "https://cdn.jsdelivr.net/gh/Shiliumi/live2d-widget-v3@main";
   const config = {
     
@@ -930,6 +1020,195 @@
     });
   }
 </script>
+
+<style>
+    #TableOfContents > ul, ol {
+        ul, ol {
+            display: none;
+        }
+        .open {
+            display: block;
+        }
+    }
+</style>
+
+<script>
+    function initTocHide() {
+        
+        let toc = document.querySelector(".widget--toc");
+        if (!toc) {
+            return;
+        }
+        
+        window.addEventListener('scroll', function() {
+            
+            let openUl = document.querySelectorAll(".open");
+            if (openUl.length > 0) {
+              openUl.forEach((ul) => {
+                ul.classList.remove("open")
+              })
+            }
+            
+            let currentLi = document.querySelector(".active-class");
+            if (!currentLi) {
+                return
+            }
+            
+            if (currentLi.children.length > 1) {
+                currentLi.children[1].classList.add("open")
+            }
+            
+            let ul = currentLi.parentElement;
+            do {
+                ul.classList.add("open");
+                ul = ul.parentElement.parentElement
+            } while (ul !== undefined && (ul.localName === 'ul' || ul.localName === 'ol'))
+        });
+    }
+    initTocHide()
+</script>
+
+<style>
+    #backTopBtn {
+        display: none;
+        position: fixed;
+        bottom: 30px;
+        z-index: 99;
+        cursor: pointer;
+        width: 30px;
+        height: 30px;
+        background-image: url(https://Shiliumi.github.io/icons/backTop.svg);
+    }
+</style>
+
+<script>
+    
+
+    function initScrollTop() {
+        let rightSideBar = document.querySelector(".right-sidebar");
+        if (!rightSideBar) {
+            return;
+        }
+        
+        let btn = document.createElement("div");
+        btn.id = "backTopBtn";
+        btn.onclick = backToTop
+        rightSideBar.appendChild(btn)
+        
+        window.onscroll = function() {
+            
+            if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                btn.style.display = "block";
+            } else {
+                btn.style.display = "none";
+            }
+        };
+    }
+
+    
+
+    function backToTop(){
+        window.scrollTo({ top: 0, behavior: "smooth" })
+    }
+
+    initScrollTop();
+</script>
+
+<style>
+    .highlight {
+         
+        max-height: 400px;
+        overflow: hidden;
+    }
+
+    .code-show {
+        max-height: none !important;
+    }
+
+    .code-more-box {
+        width: 100%;
+        padding-top: 78px;
+        background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 0)), to(#fff));
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1;
+    }
+
+    .code-more-btn {
+        display: block;
+        margin: auto;
+        width: 44px;
+        height: 22px;
+        background: #f0f0f5;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+        padding-top: 6px;
+        cursor: pointer;
+    }
+
+    .code-more-img {
+        cursor: pointer !important;
+        display: block;
+        margin: auto;
+        width: 22px;
+        height: 16px;
+    }
+</style>
+
+<script>
+  function initCodeMoreBox() {
+    let codeBlocks = document.querySelectorAll(".highlight");
+    if (!codeBlocks) {
+      return;
+    }
+    codeBlocks.forEach(codeBlock => {
+      
+      if (codeBlock.scrollHeight <= codeBlock.clientHeight) {
+        return;
+      }
+      
+      
+      let codeMoreBox = document.createElement('div');
+      codeMoreBox.classList.add('code-more-box');
+      
+      let codeMoreBtn = document.createElement('span');
+      codeMoreBtn.classList.add('code-more-btn');
+      codeMoreBtn.addEventListener('click', () => {
+        codeBlock.classList.add('code-show');
+        codeMoreBox.style.display = 'none';
+        
+        window.dispatchEvent(new Event('resize'))
+      })
+      
+      let img = document.createElement('img');
+      img.classList.add('code-more-img');
+      img.src = "https://Shiliumi.github.io/icons/codemore.png"
+      
+      codeMoreBtn.appendChild(img);
+      codeMoreBox.appendChild(codeMoreBtn);
+      codeBlock.appendChild(codeMoreBox)
+    })
+  }
+  
+  initCodeMoreBox();
+</script>
+
+
+
+<style>
+  @font-face {
+    font-family: 'WenKai';
+    src: url('/font/LXGWWenKai_Light.ttf') format('truetype');
+    font-display: swap;
+  }
+
+  :root {
+    --base-font-family: 'WenKai', serif;
+    --code-font-family: 'WenKai', monospace;
+  }
+</style>
 
     </body>
 </html>
