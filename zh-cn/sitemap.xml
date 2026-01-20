@@ -89,10 +89,10 @@
     <loc>https://Shiliumi.github.io/categories/%E6%B5%8B%E8%AF%95/</loc>
     <lastmod>2020-09-09T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://Shiliumi.github.io/archives/</loc>
-    <lastmod>2019-05-28T00:00:00+00:00</lastmod>
-  </url><url>
     <loc>https://Shiliumi.github.io/page/</loc>
+    <lastmod>2020-10-09T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://Shiliumi.github.io/archives/</loc>
     <lastmod>2019-05-28T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://Shiliumi.github.io/tags/css/</loc>
@@ -137,13 +137,8 @@
     <loc>https://Shiliumi.github.io/p/emoji-support/</loc>
     <lastmod>2019-03-05T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://Shiliumi.github.io/_index.ja/</loc>
-  </url><url>
-    <loc>https://Shiliumi.github.io/_index.zh-tw/</loc>
-  </url><url>
-    <loc>https://Shiliumi.github.io/links/</loc>
-  </url><url>
-    <loc>https://Shiliumi.github.io/search/</loc>
+    <loc>https://Shiliumi.github.io/%E5%85%B3%E4%BA%8E/</loc>
+    <lastmod>2020-10-09T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://Shiliumi.github.io/categories/%D8%AA%D8%AC%D8%B1%D8%A8%D8%A9/</loc>
   </url><url>
@@ -159,6 +154,8 @@
   </url><url>
     <loc>https://Shiliumi.github.io/categories/%E6%B8%AC%E8%A9%A6/</loc>
   </url><url>
-    <loc>https://Shiliumi.github.io/%E5%85%B3%E4%BA%8E/</loc>
+    <loc>https://Shiliumi.github.io/search/</loc>
+  </url><url>
+    <loc>https://Shiliumi.github.io/%E5%8F%8B%E9%93%BE/</loc>
   </url>
 </urlset>
