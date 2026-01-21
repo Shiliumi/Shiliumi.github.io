@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-us" dir="ltr">
-    <head><meta charset='utf-8'>
+
+<head><meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content="欢迎来到我的网站，此博客由【Hugo + Stack】进行搭建，主要分享个人生活和学习笔记">
 <title>Tag: Git - 翟小翟</title>
 
@@ -15,8 +16,9 @@
 <meta name="twitter:description" content="欢迎来到我的网站，此博客由【Hugo + Stack】进行搭建，主要分享个人生活和学习笔记"><link rel="alternate" type="application/rss&#43;xml" href="https://Shiliumi.github.io/tags/git/index.xml">
     <link rel="shortcut icon" href="/favicon.ico" />
 
-    </head>
-    <body class="">
+</head>
+
+<body class="">
     <script>
         (function() {
             const colorSchemeKey = 'StackColorScheme';
@@ -40,8 +42,9 @@
     })();
 </script>
 
-        <div id="swup-content" class="transition-fade">
-            <div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <div id="swup-content" class="transition-fade" data-body-class="">
+        <div
+            class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
     <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
         <span class="hamburger-box">
             <span class="hamburger-inner"></span>
@@ -328,7 +331,7 @@
     </aside>
 
 
-                <main class="main full-width">
+            <main class="main full-width">
     <header>
         <h3 class="section-title">
             
@@ -383,11 +386,11 @@
 </footer>
 
 
-                </main>
-            </div>
+            </main>
         </div>
-        
-        <script 
+    </div>
+
+    <script 
                 src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
                 
                 >
@@ -430,196 +433,330 @@
 <script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.min.js"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Pjax loaded:', typeof Pjax);
-    
-    if (typeof Pjax === 'undefined') {
-        console.error('Pjax not loaded!');
-        return;
-    }
-    
-    
-    const pjax = new Pjax({
-        selectors: [
-            'title',
-            'meta[name=description]',
-            '#swup-content'
-        ],
-        switches: {
-            '#swup-content': function(oldEl, newEl, options) {
-                oldEl.outerHTML = newEl.outerHTML;
-                this.onSwitch();
-            }
-        },
-        switchesOptions: {
-            '#swup-content': {
-                classNames: {
-                    remove: 'pjax-out',
-                    add: 'pjax-in',
-                    backward: 'pjax-backward',
-                    forward: 'pjax-forward'
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('Pjax loaded:', typeof Pjax);
+
+        if (typeof Pjax === 'undefined') {
+            console.error('Pjax not loaded!');
+            return;
+        }
+
+        
+        const pjax = new Pjax({
+            selectors: [
+                'title',
+                'meta[name=description]',
+                '#swup-content'
+            ],
+            switches: {
+                '#swup-content': function (oldEl, newEl, options) {
+                    oldEl.outerHTML = newEl.outerHTML;
+                    this.onSwitch();
                 }
-            }
-        },
-        cacheBust: false
-    });
-    
-    console.log('Pjax initialized:', pjax);
-    
-    
-    function bindDynamicLinks() {
-        
-        const searchResults = document.querySelectorAll('.search-result--list a');
-        searchResults.forEach(link => {
-            if (!link.hasAttribute('data-pjax-bound')) {
-                link.setAttribute('data-pjax-bound', 'true');
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const url = this.getAttribute('href');
-                    console.log('Search result link clicked:', url);
-                    pjax.loadUrl(url);
-                });
-            }
+            },
+            switchesOptions: {
+                '#swup-content': {
+                    classNames: {
+                        remove: 'pjax-out',
+                        add: 'pjax-in',
+                        backward: 'pjax-backward',
+                        forward: 'pjax-forward'
+                    }
+                }
+            },
+            cacheBust: false
         });
-    }
-    
-    
-    function initPage() {
-        console.log('Initializing page...');
+
+        console.log('Pjax initialized:', pjax);
+
         
-        
-        if (typeof window.Stack !== 'undefined' && window.Stack.init) {
-            console.log('Reinitializing Stack theme');
-            window.Stack.init();
-        }
-        
-        
-        if (typeof Prism !== 'undefined') {
-            Prism.highlightAll();
-        }
-        
-        
-        const searchPageForm = document.querySelector('.search-form[data-json]');
-        if (searchPageForm) {
-            console.log('Search page detected, reinitializing search...');
+        function bindDynamicLinks() {
             
-            
-            const searchScripts = document.querySelectorAll('script[src*="search"]');
-            searchScripts.forEach(script => {
-                if (script.src && script.src.includes('search') && !script.src.includes('pjax')) {
-                    const newScript = document.createElement('script');
-                    newScript.src = script.src + '?t=' + Date.now();
-                    newScript.type = 'text/javascript';
-                    newScript.defer = true;
-                    script.parentNode.replaceChild(newScript, script);
-                    console.log('Search script reloaded:', newScript.src);
+            const searchResults = document.querySelectorAll('.search-result--list a');
+            searchResults.forEach(link => {
+                if (!link.hasAttribute('data-pjax-bound')) {
+                    link.setAttribute('data-pjax-bound', 'true');
+                    link.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const url = this.getAttribute('href');
+                        console.log('Search result link clicked:', url);
+                        pjax.loadUrl(url);
+                    });
                 }
             });
-            
-            
-            setTimeout(() => {
-                window.dispatchEvent(new Event('load'));
-                
-                setTimeout(bindDynamicLinks, 500);
-            }, 100);
-            
-            
-            const searchResultList = document.querySelector('.search-result--list');
-            if (searchResultList) {
-                const observer = new MutationObserver(function() {
-                    console.log('Search results updated, binding links...');
-                    bindDynamicLinks();
-                });
-                observer.observe(searchResultList, {
-                    childList: true,
-                    subtree: true
-                });
-            }
         }
+
         
-        
-        const images = document.querySelectorAll('#swup-content img');
-        images.forEach(img => {
+        function initPage() {
+            console.log('Initializing page...');
+
             
-            if (!img.complete) {
-                const src = img.src;
-                img.src = '';
-                img.src = src;
+            
+            const swupContent = document.getElementById('swup-content');
+            if (swupContent && swupContent.hasAttribute('data-body-class')) {
+                const newClass = swupContent.getAttribute('data-body-class');
+                console.log('Updating body class to:', newClass);
+                document.body.className = newClass;
+            }
+            
+
+            
+            if (typeof window.Stack !== 'undefined' && window.Stack.init) {
+                console.log('Reinitializing Stack theme');
+                window.Stack.init();
+            }
+
+            
+            if (typeof Prism !== 'undefined') {
+                Prism.highlightAll();
+            }
+
+            
+            
+            
+            
+            const mathElements = [".main-article", ".widget--toc"];
+            let needsMath = false;
+            mathElements.forEach(selector => {
+                if (document.querySelector(selector)) {
+                    needsMath = true;
+                }
+            });
+
+            if (needsMath) {
+                console.log('Math elements detected, checking KaTeX...');
+
+                
+                const katexCSS = "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css";
+                const katexJS = "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js";
+                const autoRenderJS = "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js";
+
+                
+                function loadCSS(href) {
+                    if (!document.querySelector(`link[href="${href}"]`)) {
+                        const link = document.createElement('link');
+                        link.rel = 'stylesheet';
+                        link.href = href;
+                        link.crossOrigin = "anonymous";
+                        document.head.appendChild(link);
+                        console.log('Loaded CSS:', href);
+                    }
+                }
+
+                
+                function loadScript(src, callback) {
+                    const existingScript = document.querySelector(`script[src="${src}"]`);
+                    if (existingScript) {
+                        
+                        
+                        if (callback) callback();
+                        return;
+                    }
+
+                    const script = document.createElement('script');
+                    script.src = src;
+                    script.crossOrigin = "anonymous";
+                    script.onload = callback;
+                    document.head.appendChild(script);
+                    console.log('Loading Script:', src);
+                }
+
+                
+                function renderMath() {
+                    if (typeof renderMathInElement === 'function') {
+                        console.log('Rendering Math...');
+                        mathElements.forEach(selector => {
+                            const element = document.querySelector(selector);
+                            if (element) {
+                                renderMathInElement(element, {
+                                    delimiters: [
+                                        { left: "$$", right: "$$", display: true },
+                                        { left: "$", right: "$", display: false },
+                                        { left: "\\(", right: "\\)", display: false },
+                                        { left: "\\[", right: "\\]", display: true }
+                                    ],
+                                    ignoredClasses: ["gist"]
+                                });
+                            }
+                        });
+                    } else {
+                        console.error('renderMathInElement is not defined even after loading scripts.');
+                    }
+                }
+
+                
+                loadCSS(katexCSS);
+
+                
+                if (typeof katex === 'undefined') {
+                    loadScript(katexJS, function () {
+                        if (typeof renderMathInElement === 'undefined') {
+                            loadScript(autoRenderJS, function () {
+                                renderMath();
+                            });
+                        } else {
+                            renderMath();
+                        }
+                    });
+                } else if (typeof renderMathInElement === 'undefined') {
+                    loadScript(autoRenderJS, function () {
+                        renderMath();
+                    });
+                } else {
+                    
+                    renderMath();
+                }
+            }
+            
+
+
+            
+            const searchPageForm = document.querySelector('.search-form[data-json]');
+            if (searchPageForm) {
+                console.log('Search page detected, reinitializing search...');
+
+                
+                const searchScripts = document.querySelectorAll('script[src*="search"]');
+                searchScripts.forEach(script => {
+                    if (script.src && script.src.includes('search') && !script.src.includes('pjax')) {
+                        const newScript = document.createElement('script');
+                        newScript.src = script.src + '?t=' + Date.now();
+                        newScript.type = 'text/javascript';
+                        newScript.defer = true;
+                        script.parentNode.replaceChild(newScript, script);
+                        console.log('Search script reloaded:', newScript.src);
+                    }
+                });
+
+                
+                setTimeout(() => {
+                    window.dispatchEvent(new Event('load'));
+                    
+                    setTimeout(bindDynamicLinks, 500);
+                }, 100);
+
+                
+                const searchResultList = document.querySelector('.search-result--list');
+                if (searchResultList) {
+                    const observer = new MutationObserver(function () {
+                        console.log('Search results updated, binding links...');
+                        bindDynamicLinks();
+                    });
+                    observer.observe(searchResultList, {
+                        childList: true,
+                        subtree: true
+                    });
+                }
+            }
+
+            
+            const images = document.querySelectorAll('#swup-content img');
+            images.forEach(img => {
+                
+                if (!img.complete) {
+                    const src = img.src;
+                    img.src = '';
+                    img.src = src;
+                }
+            });
+        }
+
+        
+        document.addEventListener('pjax:send', function () {
+            console.log('Pjax: navigation started');
+            document.body.classList.add('pjax-loading');
+        });
+
+        document.addEventListener('pjax:complete', function () {
+            console.log('Pjax: navigation completed');
+            document.body.classList.remove('pjax-loading');
+            initPage();
+        });
+
+        document.addEventListener('pjax:error', function (e) {
+            console.log('Pjax error:', e);
+        });
+
+        
+        document.addEventListener('submit', function (e) {
+            const form = e.target;
+            if (form.classList.contains('search-form') && form.classList.contains('widget')) {
+                e.preventDefault();
+                const keyword = form.querySelector('input[name="keyword"]').value;
+                const action = form.getAttribute('action');
+
+                if (keyword) {
+                    const url = action + '?keyword=' + encodeURIComponent(keyword);
+                    console.log('Search form submitted, navigating to:', url);
+                    pjax.loadUrl(url);
+                }
             }
         });
-    }
-    
-    
-    document.addEventListener('pjax:send', function() {
-        console.log('Pjax: navigation started');
-        document.body.classList.add('pjax-loading');
-    });
-    
-    document.addEventListener('pjax:complete', function() {
-        console.log('Pjax: navigation completed');
-        document.body.classList.remove('pjax-loading');
+
+        
         initPage();
     });
-    
-    document.addEventListener('pjax:error', function(e) {
-        console.log('Pjax error:', e);
-    });
-    
-    
-    document.addEventListener('submit', function(e) {
-        const form = e.target;
-        if (form.classList.contains('search-form') && form.classList.contains('widget')) {
-            e.preventDefault();
-            const keyword = form.querySelector('input[name="keyword"]').value;
-            const action = form.getAttribute('action');
-            
-            if (keyword) {
-                const url = action + '?keyword=' + encodeURIComponent(keyword);
-                console.log('Search form submitted, navigating to:', url);
-                pjax.loadUrl(url);
-            }
-        }
-    });
-    
-    
-    initPage();
-});
 </script>
 
 <style>
- 
-.pjax-loading::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 3px;
-    background: linear-gradient(90deg, #4cd964, #5ac8fa, #007aff, #34aadc, #5856d6, #ff2d55);
-    background-size: 200% 100%;
-    animation: pjax-loading 1s linear infinite;
-    z-index: 9999;
-}
-
-@keyframes pjax-loading {
-    0% {
-        background-position: 0% 0%;
+     
+    .pjax-loading::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, #4cd964, #5ac8fa, #007aff, #34aadc, #5856d6, #ff2d55);
+        background-size: 200% 100%;
+        animation: pjax-loading 1s linear infinite;
+        z-index: 9999;
     }
-    100% {
-        background-position: 200% 0%;
+
+    @keyframes pjax-loading {
+        0% {
+            background-position: 0% 0%;
+        }
+
+        100% {
+            background-position: 200% 0%;
+        }
     }
-}
 
- 
-#swup-content {
-    transition: opacity 0.2s ease-in-out;
-}
+     
+    #swup-content {
+        transition: opacity 0.2s ease-in-out;
+    }
 
-body.pjax-loading #swup-content {
-    opacity: 0.6;
-}
+    body.pjax-loading #swup-content {
+        opacity: 0.6;
+    }
+</style>
+<script src="https://fastly.jsdelivr.net/npm/live2d-widgets@1.0.0/dist/autoload.js"></script>
+
+<style>
+     
+    #waifu {
+        left: auto !important;
+        right: 0 !important;
+    }
+
+     
+    #waifu-tool {
+        right: auto !important;
+        left: 0px !important;
+    }
+
+     
+    #waifu-toggle {
+        left: auto !important;
+        right: 0 !important;
+        margin-left: 0 !important;
+        margin-right: -100px;
+         
+    }
 </style>
 
+</body>
 
-    </body>
 </html>
