@@ -7,11 +7,11 @@
 
 <link rel='canonical' href='https://Shiliumi.github.io/categories/%E6%8A%80%E6%9C%AF%E5%88%86%E4%BA%AB/'>
 
-<link rel="stylesheet" href="/scss/style.min.0ee87300fba6e979932c6c9dce819f7c6286fd130e19aa9a6c031dd312fc6ccf.css"><meta property='og:title' content="Category: 技术分享 - 翟小翟">
+<link rel="stylesheet" href="/scss/style.min.64fa0a1c824fb709743e9bbb7df53247f11a87e3374769b8bf13aca1b8b5555a.css"><meta property='og:title' content="Category: 技术分享 - 翟小翟">
 <meta property='og:description' content="欢迎来到我的网站，此博客由【Hugo + Stack】进行搭建，主要分享个人生活和学习笔记">
 <meta property='og:url' content='https://Shiliumi.github.io/categories/%E6%8A%80%E6%9C%AF%E5%88%86%E4%BA%AB/'>
 <meta property='og:site_name' content='翟小翟'>
-<meta property='og:type' content='website'><meta property='og:updated_time' content=' 2026-01-20T00:00:00&#43;00:00 '/>
+<meta property='og:type' content='website'><meta property='og:updated_time' content=' 2026-01-20T21:23:11&#43;08:00 '/>
 <meta name="twitter:title" content="Category: 技术分享 - 翟小翟">
 <meta name="twitter:description" content="欢迎来到我的网站，此博客由【Hugo + Stack】进行搭建，主要分享个人生活和学习笔记"><link rel="alternate" type="application/rss&#43;xml" href="https://Shiliumi.github.io/categories/%E6%8A%80%E6%9C%AF%E5%88%86%E4%BA%AB/index.xml">
     <link rel="shortcut icon" href="/favicon.ico" />
@@ -232,7 +232,7 @@
 
 
 
-                        <span>暗色模式</span>
+                        <span>暗色模式 | Dark Mode</span>
                     </li>
                 
             </ol>
@@ -732,30 +732,226 @@
         opacity: 0.6;
     }
 </style>
-<script src="https://fastly.jsdelivr.net/npm/live2d-widgets@1.0.0/dist/autoload.js"></script>
+<div id="particles-js"></div>
+
+<script src=https://Shiliumi.github.io/background/particles.min.js></script>
+<script>
+  particlesJS.load('particles-js', "https://Shiliumi.github.io/background/particlesjs-config.json", function() {
+    console.log('particles.js loaded - callback');
+  });
+</script>
+
+<style>
+  #particles-js {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: -1;
+  }
+</style>
 
 <style>
      
-    #waifu {
-        left: auto !important;
-        right: 0 !important;
+    #TableOfContents ul ul,
+    #TableOfContents ul ol,
+    #TableOfContents ol ul,
+    #TableOfContents ol ol {
+        display: none;
     }
-
      
-    #waifu-tool {
-        right: auto !important;
-        left: 0px !important;
-    }
-
-     
-    #waifu-toggle {
-        left: auto !important;
-        right: 0 !important;
-        margin-left: 0 !important;
-        margin-right: -100px;
-         
+    #TableOfContents ul.open,
+    #TableOfContents ol.open {
+        display: block !important;
     }
 </style>
+
+<script>
+    function initTocHide() {
+        
+        let toc = document.querySelector(".widget--toc");
+        if (!toc) {
+            return;
+        }
+
+        
+        function updateTocVisibility() {
+            
+            let openUl = document.querySelectorAll("#TableOfContents .open");
+            openUl.forEach((ul) => {
+                ul.classList.remove("open");
+            });
+
+            
+            let currentLi = document.querySelector("#TableOfContents .active-class");
+            if (!currentLi) {
+                return;
+            }
+
+            
+            if (currentLi.children.length > 1) {
+                let childList = currentLi.children[1];
+                if (childList && (childList.tagName === 'UL' || childList.tagName === 'OL')) {
+                    childList.classList.add("open");
+                }
+            }
+
+            
+            let parentElement = currentLi.parentElement;
+            while (parentElement && (parentElement.tagName === 'UL' || parentElement.tagName === 'OL')) {
+                parentElement.classList.add("open");
+                
+                parentElement = parentElement.parentElement;
+                if (parentElement && parentElement.tagName === 'LI') {
+                    parentElement = parentElement.parentElement;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        
+        updateTocVisibility();
+
+        
+        window.addEventListener('scroll', updateTocVisibility);
+    }
+
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTocHide);
+    } else {
+        initTocHide();
+    }
+</script>
+
+<style>
+    #backTopBtn {
+        display: none;
+        position: fixed;
+        bottom: 30px;
+        z-index: 99;
+        cursor: pointer;
+        width: 30px;
+        height: 30px;
+        background-image: url(https://Shiliumi.github.io/icons/backTop.svg);
+    }
+</style>
+
+<script>
+    
+
+    function initScrollTop() {
+        let rightSideBar = document.querySelector(".right-sidebar");
+        if (!rightSideBar) {
+            return;
+        }
+        
+        let btn = document.createElement("div");
+        btn.id = "backTopBtn";
+        btn.onclick = backToTop
+        rightSideBar.appendChild(btn)
+        
+        window.onscroll = function() {
+            
+            if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                btn.style.display = "block";
+            } else {
+                btn.style.display = "none";
+            }
+        };
+    }
+
+    
+
+    function backToTop(){
+        window.scrollTo({ top: 0, behavior: "smooth" })
+    }
+
+    initScrollTop();
+</script>
+
+<style>
+    .highlight {
+         
+        max-height: 400px;
+        overflow: hidden;
+    }
+
+    .code-show {
+        max-height: none !important;
+    }
+
+    .code-more-box {
+        width: 100%;
+        padding-top: 78px;
+        background-image: -webkit-gradient(linear, left top, left bottom, from(rgba(255, 255, 255, 0)), to(#fff));
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1;
+    }
+
+    .code-more-btn {
+        display: block;
+        margin: auto;
+        width: 44px;
+        height: 22px;
+        background: #f0f0f5;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+        padding-top: 6px;
+        cursor: pointer;
+    }
+
+    .code-more-img {
+        cursor: pointer !important;
+        display: block;
+        margin: auto;
+        width: 22px;
+        height: 16px;
+    }
+</style>
+
+<script>
+  function initCodeMoreBox() {
+    let codeBlocks = document.querySelectorAll(".highlight");
+    if (!codeBlocks) {
+      return;
+    }
+    codeBlocks.forEach(codeBlock => {
+      
+      if (codeBlock.scrollHeight <= codeBlock.clientHeight) {
+        return;
+      }
+      
+      
+      let codeMoreBox = document.createElement('div');
+      codeMoreBox.classList.add('code-more-box');
+      
+      let codeMoreBtn = document.createElement('span');
+      codeMoreBtn.classList.add('code-more-btn');
+      codeMoreBtn.addEventListener('click', () => {
+        codeBlock.classList.add('code-show');
+        codeMoreBox.style.display = 'none';
+        
+        window.dispatchEvent(new Event('resize'))
+      })
+      
+      let img = document.createElement('img');
+      img.classList.add('code-more-img');
+      img.src = "https://Shiliumi.github.io/icons/codeMore.png"
+      
+      codeMoreBtn.appendChild(img);
+      codeMoreBox.appendChild(codeMoreBtn);
+      codeBlock.appendChild(codeMoreBox)
+    })
+  }
+  
+  initCodeMoreBox();
+</script>
+
 
 </body>
 
