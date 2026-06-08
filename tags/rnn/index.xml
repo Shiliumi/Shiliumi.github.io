@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>RNN on 小翟的个人博客</title><link>https://shiliumi.github.io/tags/rnn/</link><description>Recent content in RNN on 小翟的个人博客</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sun, 07 Jun 2026 14:00:56 +0800</lastBuildDate><atom:link href="https://shiliumi.github.io/tags/rnn/index.xml" rel="self" type="application/rss+xml"/><item><title>LSTM：给循环网络一条不容易断的误差信道</title><link>https://shiliumi.github.io/post/lstm-long-short-term-memory/</link><pubDate>Sat, 06 Jun 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/lstm-long-short-term-memory/</guid><description>&lt;img src="https://shiliumi.github.io/post/lstm-long-short-term-memory/paper-figure.png" alt="Featured image of post LSTM：给循环网络一条不容易断的误差信道" /&gt;&lt;p&gt;LSTM 这篇论文读起来不像后来的模型论文。它没有从一个漂亮模块开始讲，而是先咬住一个训练问题：普通循环网络理论上可以表达长时间依赖，真正训练时却经常学不到。Hochreiter 和 Schmidhuber 的答案也不是“把网络做大”，而是给误差信号设计一条更稳定的通路。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="LSTM 原论文 Figure 1" class="gallery-image" data-flex-basis="440px" data-flex-grow="183" height="610" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://shiliumi.github.io/post/lstm-long-short-term-memory/paper-figure.png" srcset="https://shiliumi.github.io/post/lstm-long-short-term-memory/paper-figure_hu_e3d7732c63bf9b2f.png 800w, https://shiliumi.github.io/post/lstm-long-short-term-memory/paper-figure.png 1120w" width="1120"&gt;&lt;/p&gt;
+&lt;p&gt;图：原论文 Figure 1，展示 memory cell、输入门、输出门以及自循环连接。这里直接从论文 PDF 裁取。&lt;/p&gt;
+&lt;h2 id="先别急着背三个门"&gt;先别急着背三个门
+&lt;/h2&gt;&lt;p&gt;很多教程讲 LSTM，会从输入门、遗忘门、输出门开始。这对写代码方便，但不太像原论文的逻辑。原论文先讨论的是梯度在时间上怎么传播。普通 RNN 每走一个时间步，误差都要乘上循环权重和激活函数导数。时间间隔短时问题还不明显；一旦监督信号和触发事件隔得很远，梯度就可能一路变小到几乎没有，也可能在某些权重条件下爆炸。&lt;/p&gt;
+&lt;p&gt;这个问题并不是“模型不够聪明”，而是路径本身太难走。你可以想象一个需要在第 100 步才输出答案的序列任务：第 1 步的线索确实重要，但它的责任信号要穿过 99 次递归变换才能回来。每一步都稍微缩一下，最后就什么也剩不下。&lt;/p&gt;
+&lt;p&gt;LSTM 的核心是 constant error carousel，常被简称为 CEC。它的意思不是让误差永远不变，而是在 memory cell 内部建立一条权重为 1 的自循环，使误差信号在理想情况下可以沿状态通道跨时间传递。门控单元负责决定外部信息什么时候进入、内部信息什么时候暴露给外部。重点是：先有稳定误差流的目标，再有门的结构。&lt;/p&gt;
+&lt;h2 id="figure-1-里真正关键的线"&gt;Figure 1 里真正关键的线
+&lt;/h2&gt;&lt;p&gt;原论文 Figure 1 比现代教程图更有“电路图”味道。中间的盒子是 memory cell，盒子里的自循环标了 &lt;code&gt;1.0&lt;/code&gt;，这就是常数误差流的物理位置。左边是输入到 cell 的连接，下面有输入门 &lt;code&gt;in_j&lt;/code&gt;，右下有输出门 &lt;code&gt;out_j&lt;/code&gt;。输入门控制写入，输出门控制读出。图里没有今天标准 LSTM 里的遗忘门，这是后来 Gers 等人在 2000 年左右加入并广泛使用的扩展。&lt;/p&gt;
+&lt;p&gt;这张图要顺着状态走，而不是顺着计算公式走。外部输入先经过某个非线性变换，只有输入门打开时才写进 cell state；cell state 通过自循环跨时间保留；输出门打开时，内部状态经过输出非线性影响外部网络。这样一来，保存信息和使用信息被拆开了。普通 RNN 的隐藏状态既要记忆又要输出，压力很大；LSTM 把“记在内部”和“给外部看”分成了两个动作。&lt;/p&gt;
+&lt;p&gt;如果只把门理解成三个 sigmoid，就会漏掉这个结构动机。门不是装饰，也不只是让网络更复杂。它们是在保护那条线性的状态通道：该写的时候写，该读的时候读，该隔离外界噪声的时候关上。&lt;/p&gt;
+&lt;h2 id="为什么长依赖突然可学了"&gt;为什么长依赖突然可学了
+&lt;/h2&gt;&lt;p&gt;普通 RNN 的远距离依赖难学，是因为信息和梯度都要反复经过同一类非线性更新。LSTM 让一部分信息停留在更接近线性的状态里。这样，梯度反传时不必每一步都被激活函数导数压一次。结构上留了路，优化器才有机会找到解。&lt;/p&gt;
+&lt;p&gt;论文的实验不少是人工构造任务，例如在长噪声序列中记住早期触发符号，隔很多步后再输出结果。今天看这些任务可能觉得“不够真实”，但它们恰好对准作者要证明的能力：模型能不能跨越很长时间间隔学习因果关系。对于 1997 年的语境，这比在某个自然语言数据集上刷一点指标更有说服力。&lt;/p&gt;
+&lt;p&gt;还有一个容易忽略的点：LSTM 并没有保证所有长依赖都自动解决。门也要学，状态也可能被错误写入，优化仍然可能失败。它提供的是一条可训练路径，不是消除训练难度的魔法。这个判断放到今天也适用。任何结构改进，如果没有改变梯度和信息的路径，只是把模块名字换得更响，通常不会真正解决深层或长程问题。&lt;/p&gt;
+&lt;h2 id="原始-lstm-和现代-lstm-不完全一样"&gt;原始 LSTM 和现代 LSTM 不完全一样
+&lt;/h2&gt;&lt;p&gt;现代实现里常见的 LSTM 有输入门、遗忘门、输出门，还有候选状态，通常写成一组矩阵乘法。原始论文里最核心的是输入门、输出门和 CEC，自循环权重固定为 1，用门来保护记忆。遗忘门后来变得非常重要，因为真实任务里的序列并不总是只需要“永远记住”，很多信息要主动清理。&lt;/p&gt;
+&lt;p&gt;这也解释了一个读论文时常见的困惑：为什么我熟悉的 LSTM 公式和原文图不一样。没必要硬把所有符号逐项对应。更好的读法是沿着演化线看：原始 LSTM 解决了“误差能不能长距离传”，遗忘门解决了“记忆什么时候该释放”，peephole connection 又让门可以看 cell state，后来的工程实现把这些计算合并成高效矩阵操作。&lt;/p&gt;
+&lt;p&gt;换句话说，原论文给的是结构原则，现代库给的是工程配方。前者解释为什么，后者负责好用。&lt;/p&gt;
+&lt;h2 id="这篇论文的实验怎么读"&gt;这篇论文的实验怎么读
+&lt;/h2&gt;&lt;p&gt;原文里有一组关于 minimal time lag 的实验，意思是监督信号和关键输入之间隔了多少时间步。普通 RNN 在 lag 变长后很快吃力，LSTM 仍然能学。这里别只看成功率，要看作者如何把问题拆成“短期记忆可以靠普通动态系统，长期信用分配需要特殊路径”。这正是论文最有价值的地方。&lt;/p&gt;
+&lt;p&gt;还有一些任务会加入噪声、干扰符号和延迟输出。它们像是在不断追问：如果有用信息很少、干扰很多、答案很晚才出现，模型能不能保护住那一点线索。LSTM 的 memory cell 正是为这种情形设计的。它不是为了让每个时间步都输出更复杂的表示，而是为了在必要时让某些状态少受打扰地活得更久。&lt;/p&gt;
+&lt;p&gt;读这些实验时，我会把它们当成“机制验证”，而不是今天意义上的综合 benchmark。作者要证明的是一个因果链：梯度路径不好会导致长依赖难学；CEC 改变路径；门控让这条路径可用；于是长间隔任务变得可训练。这个链条讲通了，论文就站住了。&lt;/p&gt;
+&lt;h2 id="今天再看-lstm"&gt;今天再看 LSTM
+&lt;/h2&gt;&lt;p&gt;Transformer 之后，LSTM 在很多 NLP 主线任务里退到了后台，但它没有变成过时知识。在线预测、低延迟语音、时间序列、设备侧模型里，循环结构仍然有自己的位置。更重要的是，LSTM 是理解神经网络优化的好教材。它提醒我们：表达能力只是问题的一半，误差怎么回来同样重要。&lt;/p&gt;
+&lt;p&gt;从这个角度看，LSTM 和 ResNet、Highway Network 有某种精神上的相似。它们都不是单纯堆更多非线性，而是在结构里给信息或梯度留一条更顺的路。区别只是 LSTM 把这条路放在时间维度上，ResNet 把它放在深度维度上。&lt;/p&gt;
+&lt;p&gt;如果要自己实现一次，建议不要从背公式开始，而是先画张计算图：&lt;code&gt;c_t&lt;/code&gt; 是否沿时间直接传递，输入门是否控制写入，输出门是否控制暴露，隐藏状态 &lt;code&gt;h_t&lt;/code&gt; 是否参与下一步外部计算。只要这几条线理清，公式版本稍有不同也不会迷路。&lt;/p&gt;
+&lt;p&gt;LSTM 最耐读的地方，是它把一个经验问题变成结构问题。不是“RNN 不好训，所以换一个更大的网络”，而是问：训练信号到底在哪条路径上坏掉了？这个问题意识，放到今天读任何新模型都不过时。&lt;/p&gt;
+&lt;h2 id="参考文献"&gt;参考文献
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;Sepp Hochreiter, Jürgen Schmidhuber. &lt;a class="link" href="https://gwern.net/doc/ai/nn/rnn/1997-hochreiter.pdf" target="_blank" rel="noopener"
+ &gt;Long Short-Term Memory&lt;/a&gt;. Neural Computation, 1997.&lt;/li&gt;
+&lt;/ul&gt;</description></item></channel></rss>

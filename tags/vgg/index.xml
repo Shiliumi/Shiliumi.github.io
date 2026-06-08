@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>VGG on 小翟的个人博客</title><link>https://shiliumi.github.io/tags/vgg/</link><description>Recent content in VGG on 小翟的个人博客</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sun, 07 Jun 2026 14:00:56 +0800</lastBuildDate><atom:link href="https://shiliumi.github.io/tags/vgg/index.xml" rel="self" type="application/rss+xml"/><item><title>VGG：把网络做深之前，先把形状做简单</title><link>https://shiliumi.github.io/post/vgg-very-deep-convnets/</link><pubDate>Sat, 06 Jun 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/vgg-very-deep-convnets/</guid><description>&lt;img src="https://shiliumi.github.io/post/vgg-very-deep-convnets/paper-figure.png" alt="Featured image of post VGG：把网络做深之前，先把形状做简单" /&gt;&lt;p&gt;VGG 这篇论文的标题是《Very Deep Convolutional Networks for Large-Scale Image Recognition》。它真正关心的问题很直接：在大规模图像识别里，网络深度到底有多重要？为了把这个问题问干净，Simonyan 和 Zisserman 做了一件很聪明的事：他们把架构形状尽量简化，只系统地增加深度。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="VGG 原论文 Table 1" class="gallery-image" data-flex-basis="236px" data-flex-grow="98" height="1280" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://shiliumi.github.io/post/vgg-very-deep-convnets/paper-figure.png" srcset="https://shiliumi.github.io/post/vgg-very-deep-convnets/paper-figure_hu_86181db2653be00b.png 800w, https://shiliumi.github.io/post/vgg-very-deep-convnets/paper-figure.png 1260w" width="1260"&gt;&lt;/p&gt;
+&lt;p&gt;图：原论文 Table 1 和 Table 2，列出 VGG 各配置的层数、卷积堆叠方式和参数量。这里直接从论文 PDF 裁取。&lt;/p&gt;
+&lt;h2 id="这篇论文不是只提出-vgg-16"&gt;这篇论文不是只提出 VGG-16
+&lt;/h2&gt;&lt;p&gt;很多人提到 VGG，第一反应是 VGG-16 或 VGG-19。但原论文不是只扔出一个模型名字，而是在做一组控制变量实验。Table 1 从配置 A 到 E，层数逐渐增加，输入、卷积核大小、池化方式、全连接头都保持高度一致。这样一来，论文可以更有底气地说：性能变化主要来自深度，而不是某个花哨模块。&lt;/p&gt;
+&lt;p&gt;这个设计在今天仍然值得学。模型论文最怕同时改太多东西，最后不知道到底是谁带来了收益。VGG 的做法近乎朴素：所有卷积都用 &lt;code&gt;3x3&lt;/code&gt;，步幅为 1，padding 保持空间尺寸；每个阶段后用 &lt;code&gt;2x2&lt;/code&gt; max pooling 降采样；通道数从 64 逐步翻到 512；最后接三个全连接层。它像是在搭一把尺子，用来量“深度”这件事本身。&lt;/p&gt;
+&lt;p&gt;也正因为规则，VGG 后来特别适合做迁移学习和特征抽取基线。你很容易知道某个特征图来自第几个 stage，也很容易替换分类头或截取中间层。它不是最高效的网络，却是非常清楚的网络。&lt;/p&gt;
+&lt;h2 id="为什么坚持-3x3"&gt;为什么坚持 &lt;code&gt;3x3&lt;/code&gt;
+&lt;/h2&gt;&lt;p&gt;论文里最关键的论证之一，是用多个小卷积替代单个大卷积。两个连续的 &lt;code&gt;3x3&lt;/code&gt; 卷积拥有 &lt;code&gt;5x5&lt;/code&gt; 的有效感受野，三个连续的 &lt;code&gt;3x3&lt;/code&gt; 卷积拥有 &lt;code&gt;7x7&lt;/code&gt; 的有效感受野。相比直接用 &lt;code&gt;5x5&lt;/code&gt; 或 &lt;code&gt;7x7&lt;/code&gt;，小卷积堆叠有两个好处：参数更少，非线性更多。&lt;/p&gt;
+&lt;p&gt;假设输入输出通道数都是 C，一个 &lt;code&gt;7x7&lt;/code&gt; 卷积需要 &lt;code&gt;49C^2&lt;/code&gt; 参数，而三个 &lt;code&gt;3x3&lt;/code&gt; 只需要 &lt;code&gt;27C^2&lt;/code&gt;。参数少只是第一层收益；更重要的是，中间多插入了两个 ReLU。也就是说，网络不是只扩大感受野，而是在同样感受野内增加了非线性变换的层数。&lt;/p&gt;
+&lt;p&gt;这个论证很漂亮，因为它把“深”从一个模糊形容词变成了可计算的选择。VGG 不是为了深而深，而是在证明：把大卷积分解成小卷积堆叠，可以用更少参数得到更强的表示能力。&lt;/p&gt;
+&lt;h2 id="table-1-怎么读"&gt;Table 1 怎么读
+&lt;/h2&gt;&lt;p&gt;Table 1 是 VGG 论文最值得细看的图。A 是 11 个 weight layers，B 是 13 层，D 是 16 层，E 是 19 层。表格里每一列都是一个网络配置，每个 stage 之间用 maxpool 分开。你会发现作者并没有随意改变通道数和池化位置，而是在同一套骨架上加卷积层。&lt;/p&gt;
+&lt;p&gt;比如配置 D，也就是后来常说的 VGG-16，在每个阶段基本是若干个 &lt;code&gt;conv3-通道数&lt;/code&gt; 的重复。前两段较浅，后面 256 和 512 通道的阶段堆得更密。配置 E 继续在后面加层，形成 VGG-19。Table 2 则提醒我们一个很现实的事实：参数量主要受全连接层影响，A 到 E 从 133M 到 144M，层数增加不少，但参数没有按同样比例暴涨，因为新增的多是小卷积。&lt;/p&gt;
+&lt;p&gt;所以 VGG 的“深”不是靠全连接层堆参数，而是靠卷积层增加特征变换深度。这个区别很重要。AlexNet 后端全连接层很重，VGG 把注意力更多拉回卷积特征本身。&lt;/p&gt;
+&lt;h2 id="实验读法深度带来稳定收益"&gt;实验读法：深度带来稳定收益
+&lt;/h2&gt;&lt;p&gt;论文在 ILSVRC 分类和定位任务上验证不同配置。结果大体支持一个结论：在相同设计原则下，增加深度能明显改善性能。配置 D 和 E 表现最好，说明从 11 层增加到 16/19 层确实带来更强视觉表示。&lt;/p&gt;
+&lt;p&gt;但这里也要读出边界。VGG 能把网络做到 19 层，是因为结构足够规则、初始化和训练策略足够稳定；继续盲目加深并不会自动成功。后来 ResNet 的出现正是因为普通堆叠网络到更深时会遇到退化问题。换句话说，VGG 把“深度有用”推到了新的高度，也顺手暴露了“深度如何继续优化”的下一道门槛。&lt;/p&gt;
+&lt;p&gt;论文的训练细节也很务实。作者使用随机裁剪、尺度抖动、水平翻转，并讨论单尺度和多尺度训练测试。VGG 的结构朴素，但训练并不粗糙。很多人只记得 &lt;code&gt;3x3&lt;/code&gt; 堆叠，容易忽略它同样依赖大规模数据增强和合理的多尺度评估。&lt;/p&gt;
+&lt;h2 id="vgg-的代价也很清楚"&gt;VGG 的代价也很清楚
+&lt;/h2&gt;&lt;p&gt;VGG 的缺点几乎和优点一样明显：参数多，计算重，内存占用高。尤其全连接层让模型体积很大。今天很少有人从头训练原版 VGG 用于生产，因为 ResNet、MobileNet、EfficientNet 等模型在精度、参数量、速度之间更平衡。&lt;/p&gt;
+&lt;p&gt;但这不影响 VGG 的历史价值。它像一块非常干净的实验板，告诉后来研究者：如果你把卷积核统一成小尺寸，把网络做得规整且更深，视觉表示会变强。后续大量工作正是在这个基础上继续追问：能不能更深？能不能更省？能不能更容易优化？&lt;/p&gt;
+&lt;p&gt;从教学角度看，VGG 也很适合当 CNN 的“第二篇论文”。LeNet 让人理解局部连接和权值共享，AlexNet 让人理解大规模训练系统，VGG 则让人第一次真正感受到“深度”作为变量本身的力量。&lt;/p&gt;
+&lt;h2 id="今天复现时该抓住什么"&gt;今天复现时该抓住什么
+&lt;/h2&gt;&lt;p&gt;如果用 PyTorch 复现 VGG，不难写出配置列表，然后循环堆 &lt;code&gt;Conv2d + ReLU&lt;/code&gt; 和 &lt;code&gt;MaxPool2d&lt;/code&gt;。真正要注意的是训练成本。原版 VGG 没有 BatchNorm，训练深网络时更依赖初始化、学习率调度和数据增强。后来很多实现会使用 VGG-BN，这已经不是原论文模型，但训练更顺。&lt;/p&gt;
+&lt;p&gt;另一个值得动手观察的地方，是特征图的空间尺寸和通道数如何变化。从 &lt;code&gt;224x224&lt;/code&gt; 输入开始，每次 maxpool 空间减半，通道逐步增加。这个节奏后来成了 CNN 很常见的骨架：用空间分辨率换语义通道，用局部小卷积不断重组视觉模式。&lt;/p&gt;
+&lt;p&gt;读完 VGG，我会把它概括成一句话：它把复杂设计拿掉，用最规则的方式证明深度有价值。正因为它少了很多花活，结论反而更响亮。&lt;/p&gt;
+&lt;h2 id="参考文献"&gt;参考文献
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;Karen Simonyan, Andrew Zisserman. &lt;a class="link" href="https://arxiv.org/abs/1409.1556" target="_blank" rel="noopener"
+ &gt;Very Deep Convolutional Networks for Large-Scale Image Recognition&lt;/a&gt;. ICLR, 2015.&lt;/li&gt;
+&lt;/ul&gt;</description></item></channel></rss>

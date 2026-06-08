@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>GitHub Actions on 小翟的个人博客</title><link>https://shiliumi.github.io/tags/github-actions/</link><description>Recent content in GitHub Actions on 小翟的个人博客</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Mon, 08 Jun 2026 11:03:57 +0800</lastBuildDate><atom:link href="https://shiliumi.github.io/tags/github-actions/index.xml" rel="self" type="application/rss+xml"/><item><title>给看板娘接入智能对话：Cloudflare Worker、RAG 与 DeepSeek</title><link>https://shiliumi.github.io/post/waifu-ai-chat-rag-worker/</link><pubDate>Mon, 08 Jun 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/waifu-ai-chat-rag-worker/</guid><description>&lt;img src="https://shiliumi.github.io/post/waifu-ai-chat-rag-worker/cover.jpg" alt="Featured image of post 给看板娘接入智能对话：Cloudflare Worker、RAG 与 DeepSeek" /&gt;&lt;p&gt;这次改造的目标，是让博客右下角的 Live2D 看板娘不只会卖萌，还能围绕站内文章和博客结构回答问题。最开始的想法是接入第三方 API，再针对博客内容做微调；实际落地时，我先选择了更轻量、也更适合当前内容规模的方案：&lt;strong&gt;Cloudflare Worker 代理 + RAG 检索增强 + DeepSeek Chat Completions&lt;/strong&gt;。&lt;/p&gt;
+&lt;p&gt;封面图来自 Pixabay 用户 TyliJura，原图页面：&lt;a class="link" href="https://pixabay.com/illustrations/woman-laptop-thinking-bubbles-9859978/" target="_blank" rel="noopener"
+ &gt;https://pixabay.com/illustrations/woman-laptop-thinking-bubbles-9859978/&lt;/a&gt;。&lt;/p&gt;
+&lt;h2 id="为什么先不微调"&gt;为什么先不微调
+&lt;/h2&gt;&lt;p&gt;当前博客文章数量还不多，站内搜索索引里大约是十几篇文章。这种体量下，直接微调一个模型并不划算：样本少，训练成本高，后续文章更新还需要重新整理数据。&lt;/p&gt;
+&lt;p&gt;RAG 更适合作为第一阶段方案：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;不需要把第三方 API Key 暴露给浏览器&lt;/li&gt;
+&lt;li&gt;文章更新后可以直接读取 Hugo 生成的搜索索引&lt;/li&gt;
+&lt;li&gt;回答时可以附带来源链接，方便读者回到原文&lt;/li&gt;
+&lt;li&gt;以后文章数量增加后，还可以平滑升级到向量检索&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;因此这次没有直接改 &lt;code&gt;live2d-widget-v3&lt;/code&gt; 源码，而是在博客源码仓库里追加功能。&lt;code&gt;live2d-models&lt;/code&gt; 继续只放模型资源，&lt;code&gt;Shiliumi.github.io&lt;/code&gt; 继续作为静态页面部署仓库，真正的功能改造都放在 &lt;code&gt;Blog&lt;/code&gt; 源码里。&lt;/p&gt;
+&lt;h2 id="前端挂载方式"&gt;前端挂载方式
+&lt;/h2&gt;&lt;p&gt;看板娘插件会在页面右下角创建工具栏 &lt;code&gt;#waifu-tool&lt;/code&gt;。为了避免改动第三方插件源码，这次新增的聊天入口是在自定义脚本里等待工具栏出现，然后追加一个新的按钮：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-ts" data-lang="ts"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;const&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;waifuChatButtonId&lt;/span&gt; &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#39;waifu-tool-chat&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#66d9ef"&gt;const&lt;/span&gt; &lt;span style="color:#a6e22e"&gt;waifuChatPanelId&lt;/span&gt; &lt;span style="color:#f92672"&gt;=&lt;/span&gt; &lt;span style="color:#e6db74"&gt;&amp;#39;waifu-chat-panel&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;按钮和聊天面板的逻辑都放在 &lt;code&gt;assets/ts/custom.ts&lt;/code&gt; 中。这样做有几个好处：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;不影响 Live2D 模型和原插件升级&lt;/li&gt;
+&lt;li&gt;PJAX 页面切换后可以重复检查挂载状态，但不会重复创建按钮&lt;/li&gt;
+&lt;li&gt;聊天历史可以保存在 &lt;code&gt;sessionStorage&lt;/code&gt; 中，刷新页面前后体验更连贯&lt;/li&gt;
+&lt;li&gt;前端只请求 Worker，不接触任何模型服务密钥&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;聊天面板支持打开、关闭、输入、发送、加载状态、失败重试和来源链接展示。移动端则使用更窄的底部面板，避免挡住正文、APlayer 和返回顶部按钮。&lt;/p&gt;
+&lt;p&gt;这次还顺手把聊天框换成了淡粉色配色。主色从原来的青绿色改成柔和玫粉，面板背景使用浅粉渐变，用户气泡和发送按钮使用玫粉渐变，整体更贴近看板娘的视觉气质。&lt;/p&gt;
+&lt;h2 id="hugo-搜索索引"&gt;Hugo 搜索索引
+&lt;/h2&gt;&lt;p&gt;原站点已经有搜索页，路径是：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-text" data-lang="text"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;/page/search/index.json
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;为了复用这份数据，我新增了搜索 JSON 的覆盖模板，在保留原字段的基础上补充了这些结构信息：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;description&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;categories&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;tags&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;section&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;url&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;前端原有搜索脚本会忽略额外字段，所以这个改动不会破坏搜索页。Worker 则可以用这些字段做更好的检索和提示词组织。&lt;/p&gt;
+&lt;h2 id="worker-代理与-rag"&gt;Worker 代理与 RAG
+&lt;/h2&gt;&lt;p&gt;后端代理放在 &lt;code&gt;worker/waifu-chat&lt;/code&gt; 目录中，是一个独立的 Cloudflare Worker 项目。它的职责比较清晰：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;校验 CORS，只允许博客域名和本地预览地址访问&lt;/li&gt;
+&lt;li&gt;读取 Hugo 搜索索引并缓存一段时间&lt;/li&gt;
+&lt;li&gt;将文章标题、标签、分类、正文切成片段&lt;/li&gt;
+&lt;li&gt;用轻量关键词打分检索相关片段&lt;/li&gt;
+&lt;li&gt;把检索片段和用户问题一起发给模型&lt;/li&gt;
+&lt;li&gt;返回回答和 1 到 3 个来源链接&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;当前阶段没有引入向量数据库，而是先用标题、标签、分类和正文关键词打分。对十几篇文章来说，这种方式简单、可控，也更容易调试。&lt;/p&gt;
+&lt;p&gt;如果没有找到相关片段，Worker 会直接返回“站内没有找到足够信息”的提示，而不是让模型自由发挥。这一点很重要：看板娘可以友好，但不能一本正经地编造博客里没有的内容。&lt;/p&gt;
+&lt;h2 id="deepseek-接入"&gt;DeepSeek 接入
+&lt;/h2&gt;&lt;p&gt;第三方 API 最终选择了 DeepSeek，模型设置为：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-text" data-lang="text"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;deepseek-v4-pro
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Worker 使用 OpenAI-compatible Chat Completions 格式，因此只需要配置：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-toml" data-lang="toml"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;LLM_BASE_URL&lt;/span&gt; = &lt;span style="color:#e6db74"&gt;&amp;#34;https://api.deepseek.com&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;LLM_MODEL&lt;/span&gt; = &lt;span style="color:#e6db74"&gt;&amp;#34;deepseek-v4-pro&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;真正的密钥不会写入仓库，而是通过 Wrangler secret 注入：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;npm run secret:put
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;本地开发时可以复制 &lt;code&gt;.dev.vars.example&lt;/code&gt; 为 &lt;code&gt;.dev.vars&lt;/code&gt;，再填入 &lt;code&gt;LLM_API_KEY&lt;/code&gt;。&lt;code&gt;.dev.vars&lt;/code&gt; 已经加入 Worker 子项目的 &lt;code&gt;.gitignore&lt;/code&gt;，避免误提交密钥。&lt;/p&gt;
+&lt;h2 id="部署过程"&gt;部署过程
+&lt;/h2&gt;&lt;p&gt;项目本机一开始没有 &lt;code&gt;npx&lt;/code&gt;，所以先通过 Homebrew 安装 Node.js，拿到 &lt;code&gt;npm&lt;/code&gt; 和 &lt;code&gt;npx&lt;/code&gt;。随后在 Worker 子项目中执行：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;npm install
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;npm run typecheck
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;npm run deploy
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Worker 部署到：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-text" data-lang="text"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;https://shiliumi-waifu-chat.shiliumi.workers.dev
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;博客前端则通过 Hugo 配置读取 API 地址：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-toml" data-lang="toml"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;[&lt;span style="color:#a6e22e"&gt;params&lt;/span&gt;.&lt;span style="color:#a6e22e"&gt;waifuChat&lt;/span&gt;]
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;apiUrl&lt;/span&gt; = &lt;span style="color:#e6db74"&gt;&amp;#39;https://shiliumi-waifu-chat.shiliumi.workers.dev/api/waifu-chat&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这样以后如果换成自定义域名，只需要改 &lt;code&gt;hugo.toml&lt;/code&gt;，不用重新改前端脚本。&lt;/p&gt;
+&lt;h2 id="workersdev-的网络问题"&gt;workers.dev 的网络问题
+&lt;/h2&gt;&lt;p&gt;部署后遇到一个比较现实的问题：本机网络访问 &lt;code&gt;*.workers.dev&lt;/code&gt; 时，DNS 被解析到了 &lt;code&gt;198.18.2.135&lt;/code&gt;，导致 TLS 握手失败。通过 DNS-over-HTTPS 查询，真实 Cloudflare IP 是正常的，所以这不是 Worker 代码问题，而是当前网络环境对 &lt;code&gt;workers.dev&lt;/code&gt; 的处理。&lt;/p&gt;
+&lt;p&gt;短期本地调试可以直接启动本地 Worker：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;cd worker/waifu-chat
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;npm run dev
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;然后把前端 API 临时改成：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-toml" data-lang="toml"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;[&lt;span style="color:#a6e22e"&gt;params&lt;/span&gt;.&lt;span style="color:#a6e22e"&gt;waifuChat&lt;/span&gt;]
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;apiUrl&lt;/span&gt; = &lt;span style="color:#e6db74"&gt;&amp;#39;http://localhost:8787/api/waifu-chat&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;长期更推荐给 Worker 绑定 Cloudflare 自定义域名，例如：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-text" data-lang="text"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;waifu-chat.example.com
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这样比直接使用 &lt;code&gt;workers.dev&lt;/code&gt; 更适合正式访问。&lt;/p&gt;
+&lt;h2 id="github-actions-自动部署"&gt;GitHub Actions 自动部署
+&lt;/h2&gt;&lt;p&gt;博客源码仓库已经配置了 GitHub Actions。流程是推送到 &lt;code&gt;master&lt;/code&gt; 后：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;拉取源码&lt;/li&gt;
+&lt;li&gt;安装 Hugo Extended &lt;code&gt;0.162.1&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;执行 Hugo 构建&lt;/li&gt;
+&lt;li&gt;将 &lt;code&gt;public&lt;/code&gt; 静态产物推送到 &lt;code&gt;Shiliumi/Shiliumi.github.io&lt;/code&gt; 的 &lt;code&gt;main&lt;/code&gt; 分支&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;也就是说，本地只需要维护 Hugo 源码；真正的 GitHub Pages 静态产物由 Actions 自动生成和发布。&lt;/p&gt;
+&lt;h2 id="小结"&gt;小结
+&lt;/h2&gt;&lt;p&gt;这次看板娘智能对话功能的重点，不只是“接上一个大模型 API”，而是把边界整理清楚：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;前端只负责交互，不保存密钥&lt;/li&gt;
+&lt;li&gt;Worker 负责 CORS、检索、提示词和模型调用&lt;/li&gt;
+&lt;li&gt;Hugo 继续生成静态页面和搜索索引&lt;/li&gt;
+&lt;li&gt;DeepSeek 只作为可替换的上游模型服务&lt;/li&gt;
+&lt;li&gt;GitHub Actions 继续负责静态部署&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;第一版先用轻量 RAG 跑通闭环。等文章数量明显增加后，再考虑把关键词检索升级为向量检索；等积累了足够多的问答样本，再考虑微调看板娘的语气。这样每一步都能独立验证，也更适合个人博客长期维护。&lt;/p&gt;</description></item><item><title>Stack 主题改造记录：播放器、PJAX、特效与自动部署</title><link>https://shiliumi.github.io/post/hugo-stack-customization-deploy/</link><pubDate>Sun, 31 May 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/hugo-stack-customization-deploy/</guid><description>&lt;img src="https://shiliumi.github.io/post/hugo-stack-customization-deploy/cover.jpg" alt="Featured image of post Stack 主题改造记录：播放器、PJAX、特效与自动部署" /&gt;&lt;p&gt;在基础站点可以正常运行之后，本站开始进行 Stack 主题的个性化改造。这个阶段的目标不是简单堆功能，而是在尽量不破坏主题原有结构的前提下，让博客更像一个长期使用的个人站点。&lt;/p&gt;
+&lt;h2 id="音乐播放器"&gt;音乐播放器
+&lt;/h2&gt;&lt;p&gt;本站接入了 APlayer 和 Meting，用网易云歌单作为音乐来源。播放器放在页脚自定义模板中，并使用固定模式显示，避免占用文章主体空间。&lt;/p&gt;
+&lt;p&gt;核心思路是让播放器作为全站组件加载，而不是每篇文章单独引入。这样维护起来更简单，后续更换歌单时只需要修改一处配置。&lt;/p&gt;
+&lt;h2 id="pjax-无刷新切换"&gt;PJAX 无刷新切换
+&lt;/h2&gt;&lt;p&gt;PJAX 能让站内页面切换更顺滑，但它也是最容易引入问题的功能之一。因为页面主体被替换后，很多原本只在首屏加载时执行一次的脚本不会自动重新初始化。&lt;/p&gt;
+&lt;p&gt;本站接入 PJAX 后，重点处理了这些组件的重新初始化：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;文章目录折叠与展开&lt;/li&gt;
+&lt;li&gt;代码块过长折叠&lt;/li&gt;
+&lt;li&gt;返回顶部按钮&lt;/li&gt;
+&lt;li&gt;动态背景&lt;/li&gt;
+&lt;li&gt;底部小鱼特效&lt;/li&gt;
+&lt;li&gt;Live2D 看板娘&lt;/li&gt;
+&lt;li&gt;右侧时钟组件&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;对于这类脚本，比较稳的方式是把初始化逻辑封装成函数，并在 PJAX 完成后再次调用。同时需要避免重复绑定事件，否则页面切换几次之后就会出现性能下降、重复监听、按钮失效等问题。&lt;/p&gt;
+&lt;h2 id="文章更新时间"&gt;文章更新时间
+&lt;/h2&gt;&lt;p&gt;本站使用 Hugo 的 &lt;code&gt;enableGitInfo&lt;/code&gt; 和 &lt;code&gt;frontmatter.lastmod&lt;/code&gt; 来显示文章最后更新时间。文章页和列表页都可以展示更新时间，让读者知道内容是否近期维护过。&lt;/p&gt;
+&lt;p&gt;在部署环境中还需要注意 GitHub Actions 的 checkout 深度。如果只拉取浅克隆，Hugo 可能拿不到完整 Git 信息。因此部署流程中需要保证 checkout 能提供足够的提交历史。&lt;/p&gt;
+&lt;h2 id="代码块体验"&gt;代码块体验
+&lt;/h2&gt;&lt;p&gt;为了让技术文章更易读，代码块做了两处改造：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;使用 macOS 风格的代码块顶部装饰&lt;/li&gt;
+&lt;li&gt;对过长代码块默认折叠，点击按钮后展开&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这类改造要注意不要影响复制代码，也不要让遮罩层挡住正常滚动。最终实现时把逻辑限定在 &lt;code&gt;.article-content .highlight&lt;/code&gt; 内，避免误伤主题其他区域。&lt;/p&gt;
+&lt;h2 id="返回顶部和右侧栏"&gt;返回顶部和右侧栏
+&lt;/h2&gt;&lt;p&gt;返回顶部按钮被挂载到右侧栏，而不是整个网页最右侧。这样按钮位置更贴近文章内容，不会在宽屏下离阅读区域太远。&lt;/p&gt;
+&lt;p&gt;右侧栏后来又加入了三个首页组件：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;时钟&lt;/li&gt;
+&lt;li&gt;搜索框&lt;/li&gt;
+&lt;li&gt;归档&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这些组件都使用 Stack 的 widget 机制挂载，避免直接改主题源码。后续升级主题时，只要自定义 partial 和配置还在，迁移成本会低一些。&lt;/p&gt;
+&lt;h2 id="动态效果"&gt;动态效果
+&lt;/h2&gt;&lt;p&gt;本站目前加入了动态背景、底部小鱼和 Live2D 看板娘。引入这些效果时，最重要的是控制交互边界：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;背景层不能挡住鼠标点击&lt;/li&gt;
+&lt;li&gt;小鱼特效不能抢占明暗切换按钮&lt;/li&gt;
+&lt;li&gt;Live2D 模型需要避免加载过慢导致空白&lt;/li&gt;
+&lt;li&gt;大模型资源尽量使用 CDN 或压缩后的纹理&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这次调试中，Live2D 模型出现过“透明空白”的情况，最后确认和加载速度、模型纹理资源有关。后续将模型资源独立托管，并对纹理做了无损 WebP 优化，加载体验会更稳定。&lt;/p&gt;
+&lt;h2 id="github-pages-自动部署"&gt;GitHub Pages 自动部署
+&lt;/h2&gt;&lt;p&gt;部署方案采用源码仓库和 GitHub Pages 仓库分离的方式。源码仓库保存完整 Hugo 项目，部署仓库只保存构建后的静态页面。&lt;/p&gt;
+&lt;p&gt;GitHub Actions 的职责是：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;拉取源码&lt;/li&gt;
+&lt;li&gt;配置 Git 行为和 checkout 深度&lt;/li&gt;
+&lt;li&gt;安装 Hugo Extended&lt;/li&gt;
+&lt;li&gt;执行 Hugo 构建&lt;/li&gt;
+&lt;li&gt;将生成的静态文件推送到 Pages 仓库&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;这样本地只需要维护源码，推送后由 GitHub Actions 自动完成构建和发布。&lt;/p&gt;
+&lt;h2 id="维护清单"&gt;维护清单
+&lt;/h2&gt;&lt;p&gt;后续继续改造时，我会优先检查这些点：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;是否影响 Hugo 构建&lt;/li&gt;
+&lt;li&gt;是否影响 PJAX 页面切换&lt;/li&gt;
+&lt;li&gt;是否会重复绑定事件&lt;/li&gt;
+&lt;li&gt;是否阻挡鼠标点击&lt;/li&gt;
+&lt;li&gt;是否影响移动端布局&lt;/li&gt;
+&lt;li&gt;是否让首页看起来像主题默认站点&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;个性化功能可以慢慢加，但每次加完都要回到博客本身：文章是否清晰、导航是否稳定、页面是否好读。这比单纯堆特效更重要。&lt;/p&gt;</description></item></channel></rss>

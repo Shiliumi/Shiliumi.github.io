@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Pages on 小翟的个人博客</title><link>https://shiliumi.github.io/page/</link><description>Recent content in Pages on 小翟的个人博客</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sun, 31 May 2026 22:56:50 +0800</lastBuildDate><atom:link href="https://shiliumi.github.io/page/index.xml" rel="self" type="application/rss+xml"/><item><title>相关</title><link>https://shiliumi.github.io/page/about/</link><pubDate>Mon, 26 Jan 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/page/about/</guid><description>&lt;h2 id="关于我"&gt;关于我
+&lt;/h2&gt;&lt;p&gt;你好，我是翟小翟。这里是我的个人博客，用来整理个人生活、学习笔记、技术实践和一些折腾记录。&lt;/p&gt;
+&lt;p&gt;我更倾向于把博客当作一个长期维护的知识库：一部分内容记录实际做过的事情，一部分内容沉淀学习过程中的问题、方案和复盘。文章不追求一次写完，但希望每次更新都能让内容更清楚、更可复用。&lt;/p&gt;
+&lt;h2 id="关于本站"&gt;关于本站
+&lt;/h2&gt;&lt;p&gt;本站由 &lt;strong&gt;Hugo + Stack&lt;/strong&gt; 搭建，当前正在逐步加入一些个性化组件，包括音乐播放器、页面无刷新切换、文章更新时间、动态背景、底部小鱼特效、Live2D 看板娘、右侧时钟组件和自定义导航图标。&lt;/p&gt;
+&lt;p&gt;博客主要内容会围绕以下方向展开：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;个人生活记录与阶段性总结&lt;/li&gt;
+&lt;li&gt;编程学习笔记与问题复盘&lt;/li&gt;
+&lt;li&gt;博客搭建、主题定制与前端交互优化&lt;/li&gt;
+&lt;li&gt;常用工具、开源项目和效率工作流&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="技能"&gt;技能
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;前端&lt;/strong&gt;: HTML, CSS, JavaScript, TypeScript, Vue, React&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;后端&lt;/strong&gt;: Java, Python, Go, Node.js&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;博客与工程化&lt;/strong&gt;: Hugo, Stack, Git, GitHub Actions, PJAX, Docker&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;数据与工具&lt;/strong&gt;: Markdown, Mermaid, REST API, 自动化脚本&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="当前关注"&gt;当前关注
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;让这个博客从主题示例逐步变成真正可长期维护的个人站点&lt;/li&gt;
+&lt;li&gt;梳理学习笔记，把零散问题沉淀成可检索的文章&lt;/li&gt;
+&lt;li&gt;优化页面性能，避免特效和组件影响阅读体验&lt;/li&gt;
+&lt;li&gt;维护一套稳定的部署流程，减少手动发布成本&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="联系方式"&gt;联系方式
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;GitHub&lt;/strong&gt;: &lt;a class="link" href="https://github.com/Shiliumi" target="_blank" rel="noopener"
+ &gt;Shiliumi&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;电子邮件&lt;/strong&gt;: &lt;a class="link" href="mailto:2012322639@qq.com" &gt;2012322639@qq.com&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</description></item><item><title>归档</title><link>https://shiliumi.github.io/page/archives/</link><pubDate>Tue, 28 May 2019 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/page/archives/</guid><description/></item><item><title>技术链接 | Links</title><link>https://shiliumi.github.io/page/links/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/page/links/</guid><description/></item><item><title>搜索</title><link>https://shiliumi.github.io/page/search/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/page/search/</guid><description/></item></channel></rss>

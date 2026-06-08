@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>图像分割 on 小翟的个人博客</title><link>https://shiliumi.github.io/tags/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/</link><description>Recent content in 图像分割 on 小翟的个人博客</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sun, 07 Jun 2026 14:00:56 +0800</lastBuildDate><atom:link href="https://shiliumi.github.io/tags/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/index.xml" rel="self" type="application/rss+xml"/><item><title>U-Net：为什么医学图像分割需要一条回来的路</title><link>https://shiliumi.github.io/post/unet-biomedical-segmentation/</link><pubDate>Sat, 06 Jun 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/unet-biomedical-segmentation/</guid><description>&lt;img src="https://shiliumi.github.io/post/unet-biomedical-segmentation/paper-figure.png" alt="Featured image of post U-Net：为什么医学图像分割需要一条回来的路" /&gt;&lt;p&gt;U-Net 论文很短，但信息密度很高。它不是简单把一个分类 CNN 改成分割网络，而是在处理医学图像里特别常见的矛盾：样本少、标注贵、目标边界细，又需要输出像素级结果。Ronneberger、Fischer 和 Brox 的解法，是让网络先向下压缩语义，再把空间细节一路带回来。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="U-Net 原论文 Figure 1" class="gallery-image" data-flex-basis="292px" data-flex-grow="121" height="920" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://shiliumi.github.io/post/unet-biomedical-segmentation/paper-figure.png" srcset="https://shiliumi.github.io/post/unet-biomedical-segmentation/paper-figure_hu_cd1a1af119d9c744.png 800w, https://shiliumi.github.io/post/unet-biomedical-segmentation/paper-figure.png 1120w" width="1120"&gt;&lt;/p&gt;
+&lt;p&gt;图：原论文 Figure 1，展示 U-Net 的收缩路径、扩张路径、copy and crop 连接以及各层通道数。这里直接从论文 PDF 裁取。&lt;/p&gt;
+&lt;h2 id="医学分割为什么难"&gt;医学分割为什么难
+&lt;/h2&gt;&lt;p&gt;自然图像分类只要输出一个类别，模型可以丢掉很多空间细节；医学分割不一样，它要告诉你每个像素属于哪里。细胞边界、器官轮廓、病灶区域，往往差几个像素就会影响结果。更麻烦的是，医学图像标注需要专业知识，数据量通常很小，不像 ImageNet 那样可以靠海量样本硬堆。&lt;/p&gt;
+&lt;p&gt;U-Net 的论文一上来就把问题放在这个语境里：他们希望用很少的训练图像得到准确分割，而且速度要快。传统滑窗方法会围绕每个像素取 patch 做分类，能利用局部上下文，但重复计算严重，速度慢，也难以同时兼顾大范围上下文和精确定位。&lt;/p&gt;
+&lt;p&gt;U-Net 选择 fully convolutional 的路线，让网络一次性输出整张图的分割图。它的关键不是“像素分类”，而是怎样在压缩语义后恢复空间位置。&lt;/p&gt;
+&lt;h2 id="figure-1u-形结构怎么读"&gt;Figure 1：U 形结构怎么读
+&lt;/h2&gt;&lt;p&gt;原论文 Figure 1 很直观：左边是 contracting path，右边是 expansive path。左边反复做 &lt;code&gt;3x3&lt;/code&gt; 卷积和 &lt;code&gt;2x2&lt;/code&gt; max pooling，空间尺寸下降，通道数增加；右边通过 up-convolution 提高空间分辨率，同时通道数减少。看起来像一个编码器-解码器，但真正点睛的是横向的灰色箭头：copy and crop。&lt;/p&gt;
+&lt;p&gt;这些横向连接把左侧高分辨率特征复制到右侧对应层，与上采样后的特征拼接。为什么要这样做？因为下采样带来语义，也会损失边界位置。右侧如果只靠最底部的压缩表示往回恢复，很容易得到模糊边界。跳跃连接把早期层的细节带回来，让解码器在恢复分辨率时有可用的定位信息。&lt;/p&gt;
+&lt;p&gt;注意原始 U-Net 使用的是 valid convolution，不做 padding，所以特征图每经过卷积都会变小。横向连接时需要 crop 左侧特征图，再和右侧拼接。这就是图里 “copy and crop” 的来源。今天很多实现为了方便会使用 same padding，空间尺寸更好对齐；但原论文里的裁剪不是随便写的，它和无填充卷积、边界预测策略有关。&lt;/p&gt;
+&lt;h2 id="跳跃连接和-resnet-的跳跃不是一回事"&gt;跳跃连接和 ResNet 的跳跃不是一回事
+&lt;/h2&gt;&lt;p&gt;U-Net 和 ResNet 都有 skip connection，但含义不同。ResNet 的 shortcut 是相加，目标是让深网络优化更容易，帮助学习残差。U-Net 的横向连接是拼接，目标是把高分辨率空间信息送回解码器。一个偏优化，一个偏定位。&lt;/p&gt;
+&lt;p&gt;这点很容易混淆。U-Net 的左侧浅层特征包含边缘、纹理、局部位置；右侧深层特征包含更抽象的语义。拼接以后，解码器可以同时看到“这像什么”和“它在哪里”。医学分割正需要这两者。只有语义，边界会糊；只有局部纹理，又可能缺少全局判断。&lt;/p&gt;
+&lt;p&gt;后来很多分割模型都继承了这个思想。无论是 U-Net++、Attention U-Net，还是扩散模型里的 U-Net 主干，横向特征融合都成了非常重要的结构套路。&lt;/p&gt;
+&lt;h2 id="数据增强不是配角"&gt;数据增强不是配角
+&lt;/h2&gt;&lt;p&gt;U-Net 原论文特别强调 data augmentation，尤其是 elastic deformation。医学图像样本少，如果只做普通翻转旋转，模型很容易记住训练集。弹性形变更接近生物组织和细胞形态的变化，可以让模型看到更多合理的边界变体。&lt;/p&gt;
+&lt;p&gt;这一点和论文的任务背景紧密相关。U-Net 并不是靠一个结构就解决小样本，它是结构和增强一起工作。收缩路径提供上下文，扩张路径恢复定位，数据增强扩大形变覆盖范围。少了增强，小数据上的泛化会弱很多。&lt;/p&gt;
+&lt;p&gt;论文还使用了加权损失，让相邻细胞之间的边界获得更高权重。因为在细胞分割里，最难的往往不是区分背景和细胞，而是把贴在一起的细胞分开。这个损失设计很实用：它把任务里真正贵的错误显式告诉模型。&lt;/p&gt;
+&lt;h2 id="输出尺寸和-overlap-tile"&gt;输出尺寸和 overlap-tile
+&lt;/h2&gt;&lt;p&gt;原始 U-Net 由于 valid convolution，输出分割图比输入图小。论文提出 overlap-tile strategy：对大图像分块预测，并用重叠区域处理边界。边缘缺少上下文时，还可以用镜像方式补边。这些工程细节经常被教程省略，但它们对医学图像很重要，因为显存有限，整张高分辨率图未必能一次送进网络。&lt;/p&gt;
+&lt;p&gt;如果今天用 same padding 版本 U-Net，很多尺寸麻烦会消失，但也要明白自己改了什么。same padding 让实现更方便，输出尺寸与输入一致；原论文方案则更谨慎地避免边界处无真实上下文的卷积。两者都能用，但读论文时不能把现代简化版倒推回原文。&lt;/p&gt;
+&lt;p&gt;这也是 U-Net 文章耐看的地方：它不仅画了一个 U 形网络，还把如何用少量样本训练、如何处理边界、如何预测大图像这些实际问题放在了一起。&lt;/p&gt;
+&lt;h2 id="实验为什么可信"&gt;实验为什么可信
+&lt;/h2&gt;&lt;p&gt;论文在 ISBI 细胞跟踪/分割相关任务上展示了很强结果。它的说服力不只是指标高，而是模型训练样本很少，却能通过增强和结构设计获得稳定分割。对于医学影像场景，这比在大规模自然图像上拿高分更贴近问题本身。&lt;/p&gt;
+&lt;p&gt;U-Net 还展示了速度优势。相比滑窗方法，fully convolutional 的整图预测避免了大量重复计算。分割任务里，速度不是小事；如果一个模型每个像素都单独跑 patch 分类，即使准确，也很难在真实流程中高效使用。&lt;/p&gt;
+&lt;p&gt;所以读实验时，我会把它拆成三条线：小样本能不能训，边界能不能准，推理能不能快。U-Net 的结构正好同时回应这三条线。&lt;/p&gt;
+&lt;h2 id="今天复现时最容易踩的地方"&gt;今天复现时最容易踩的地方
+&lt;/h2&gt;&lt;p&gt;第一个坑是尺寸。每次下采样和上采样后，特征图能不能对齐？如果使用原论文 valid convolution，就需要 crop；如果使用 same padding，就要确认输出尺寸和边界行为。第二个坑是上采样方式。转置卷积、插值加卷积都能用，但细节会影响棋盘伪影和边界质量。第三个坑是损失函数。医学分割常常类别不平衡，只用普通交叉熵可能不够，Dice loss、加权交叉熵或组合损失要结合任务考虑。&lt;/p&gt;
+&lt;p&gt;U-Net 之所以成为经典，不是因为它复杂，而是因为它把分割任务的矛盾抓得很准：语义需要下采样，定位需要高分辨率；数据少，需要强增强；边界重要，需要损失函数照顾。把这些放在一起看，U 形结构就不是一个漂亮轮廓，而是一套任务驱动的设计。&lt;/p&gt;
+&lt;h2 id="参考文献"&gt;参考文献
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;Olaf Ronneberger, Philipp Fischer, Thomas Brox. &lt;a class="link" href="https://arxiv.org/abs/1505.04597" target="_blank" rel="noopener"
+ &gt;U-Net: Convolutional Networks for Biomedical Image Segmentation&lt;/a&gt;. MICCAI, 2015.&lt;/li&gt;
+&lt;/ul&gt;</description></item></channel></rss>

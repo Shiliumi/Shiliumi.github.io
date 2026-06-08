@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Transformer on 小翟的个人博客</title><link>https://shiliumi.github.io/tags/transformer/</link><description>Recent content in Transformer on 小翟的个人博客</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sun, 07 Jun 2026 14:00:56 +0800</lastBuildDate><atom:link href="https://shiliumi.github.io/tags/transformer/index.xml" rel="self" type="application/rss+xml"/><item><title>BERT：双向预训练如何改变 NLP 的使用方式</title><link>https://shiliumi.github.io/post/bert-bidirectional-transformers/</link><pubDate>Sat, 06 Jun 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/bert-bidirectional-transformers/</guid><description>&lt;img src="https://shiliumi.github.io/post/bert-bidirectional-transformers/paper-figure.png" alt="Featured image of post BERT：双向预训练如何改变 NLP 的使用方式" /&gt;&lt;p&gt;BERT 的影响很大，不只是因为它在 GLUE、SQuAD 等榜单上刷新结果，更因为它改变了 NLP 模型的使用方式。以前很多任务会各自设计结构；BERT 把一个大规模预训练 Transformer encoder 拿出来，然后通过很小的任务头微调，成了后来预训练-微调范式的标准模板。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="BERT 原论文 Figure 1" class="gallery-image" data-flex-basis="423px" data-flex-grow="176" height="850" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://shiliumi.github.io/post/bert-bidirectional-transformers/paper-figure.png" srcset="https://shiliumi.github.io/post/bert-bidirectional-transformers/paper-figure_hu_65dce6b6e0d90b84.png 800w, https://shiliumi.github.io/post/bert-bidirectional-transformers/paper-figure.png 1500w" width="1500"&gt;&lt;/p&gt;
+&lt;p&gt;图：原论文 Figure 1，展示 BERT 的预训练和微调流程。这里直接从论文 PDF 裁取。&lt;/p&gt;
+&lt;h2 id="bert-的问题意识"&gt;BERT 的问题意识
+&lt;/h2&gt;&lt;p&gt;BERT 之前，ELMo 已经用语言模型预训练提供上下文表示，GPT 也展示了 Transformer decoder 预训练再微调的力量。但 GPT 是从左到右的语言模型，每个 token 只能看左侧上下文。很多理解任务需要双向上下文，比如判断一个词在句子里的含义、抽取问答 span、做自然语言推理。BERT 的核心问题就是：能不能预训练一个真正双向的深层表示？&lt;/p&gt;
+&lt;p&gt;直接用普通语言模型不行，因为如果每个位置都能看到自己，预测任务会泄漏答案。BERT 的办法是 Masked Language Model：随机遮住一部分 token，让模型根据左右上下文预测它们。这样 encoder 可以双向看上下文，又不会直接看到被预测词。&lt;/p&gt;
+&lt;p&gt;这个思路很朴素，但威力很大。它把 Transformer encoder 从一个任务结构，变成了通用文本表示学习器。&lt;/p&gt;
+&lt;h2 id="figure-1预训练和微调的同构"&gt;Figure 1：预训练和微调的同构
+&lt;/h2&gt;&lt;p&gt;原论文 Figure 1 左边是 pre-training，右边是 fine-tuning。两边都使用同一个 BERT 主体，区别主要在输入、输出头和损失。预训练时，模型处理未标注句子对，做 MLM 和 NSP；微调时，在同一个编码器上接一个很薄的任务层，比如分类、序列标注或问答起止位置预测。&lt;/p&gt;
+&lt;p&gt;这张图真正重要的是“结构尽量不变”。以前很多 NLP 任务需要定制模型：句子分类一个结构，问答一个结构，序列标注另一个结构。BERT 把它们统一成“把任务格式塞进同一个输入表示，再微调整个模型”。这极大降低了迁移成本。&lt;/p&gt;
+&lt;p&gt;图里还有 &lt;code&gt;[CLS]&lt;/code&gt; 和 &lt;code&gt;[SEP]&lt;/code&gt;。&lt;code&gt;[CLS]&lt;/code&gt; 放在序列开头，最终表示常用于句子级分类；&lt;code&gt;[SEP]&lt;/code&gt; 分隔句子 A 和句子 B。BERT 的输入表示由 token embedding、segment embedding 和 position embedding 相加得到。这个输入格式后来几乎成了 encoder 类 NLP 模型的基本语言。&lt;/p&gt;
+&lt;h2 id="mlm-的细节很关键"&gt;MLM 的细节很关键
+&lt;/h2&gt;&lt;p&gt;BERT 随机选择 15% token 作为预测目标，但并不是全部替换成 &lt;code&gt;[MASK]&lt;/code&gt;。其中 80% 替换为 &lt;code&gt;[MASK]&lt;/code&gt;，10% 替换为随机词，10% 保持原词不变。这个设计是为了解决预训练和微调之间的不一致：微调时真实输入里没有 &lt;code&gt;[MASK]&lt;/code&gt;，如果预训练只见 &lt;code&gt;[MASK]&lt;/code&gt;，会有分布差异。&lt;/p&gt;
+&lt;p&gt;这个细节很能体现论文的工程判断。MLM 不是随便遮词，它要同时满足三个目标：制造可监督信号，允许双向上下文，减少 &lt;code&gt;[MASK]&lt;/code&gt; 带来的预训练-微调差距。&lt;/p&gt;
+&lt;p&gt;MLM 也有代价。每个 batch 里只有 15% token 贡献预测损失，预训练效率不如自回归语言模型直接预测每个 token。后来很多模型围绕这个问题继续改，比如 RoBERTa 调整预训练策略，ELECTRA 用 replaced token detection 提高样本效率。BERT 是范式起点，不是终点。&lt;/p&gt;
+&lt;h2 id="nsp-的角色和争议"&gt;NSP 的角色和争议
+&lt;/h2&gt;&lt;p&gt;BERT 的第二个预训练任务是 Next Sentence Prediction。模型看到句子 A 和句子 B，要判断 B 是否真实接在 A 后面。作者希望这个任务帮助句子对关系建模，比如自然语言推理和问答。&lt;/p&gt;
+&lt;p&gt;后来研究对 NSP 的必要性提出了质疑。RoBERTa 去掉 NSP 后效果仍然很好，甚至更强。这并不削弱 BERT 原论文的价值，反而说明预训练范式还在快速摸索。读 BERT 时，可以把 NSP 看成当时为了句子级任务加入的一个尝试，而不是永恒标准。&lt;/p&gt;
+&lt;p&gt;更重要的是，BERT 把“预训练目标设计”变成了 NLP 研究的核心问题之一。模型结构之外，怎么构造自监督任务、怎么采样数据、怎么处理输入格式，都开始直接影响下游表现。&lt;/p&gt;
+&lt;h2 id="模型尺寸和微调"&gt;模型尺寸和微调
+&lt;/h2&gt;&lt;p&gt;论文主要报告 BERT_BASE 和 BERT_LARGE。BERT_BASE 有 12 层、768 hidden size、12 个 attention heads，大约 110M 参数；BERT_LARGE 有 24 层、1024 hidden size、16 heads，大约 340M 参数。这个规模在当时已经很大，但和后来的大语言模型相比还算克制。&lt;/p&gt;
+&lt;p&gt;微调时，BERT 通常不冻结主干，而是让所有参数一起更新。对句子分类任务，用 &lt;code&gt;[CLS]&lt;/code&gt; 表示接分类层；对 SQuAD 这类抽取式问答，预测每个 token 作为 start/end 的概率；对序列标注，每个 token 输出标签。统一主干，不同任务头，这就是 BERT 最实用的地方。&lt;/p&gt;
+&lt;p&gt;不过微调并不总是稳定。学习率、batch size、训练轮数、随机种子都会影响结果。小数据任务上，过拟合和灾难性遗忘也可能出现。BERT 论文展示了范式，但实际使用还需要很多调参经验。&lt;/p&gt;
+&lt;h2 id="实验结果背后的转向"&gt;实验结果背后的转向
+&lt;/h2&gt;&lt;p&gt;BERT 在 GLUE、MultiNLI、SQuAD 等任务上的结果非常亮眼。单看榜单可以说它强，但更深的变化是：NLP 模型的工作重心从“为每个任务设计结构”转向“预训练一个强通用表示，再用任务数据轻量适配”。这让下游任务开发方式发生了变化。&lt;/p&gt;
+&lt;p&gt;这种变化后来延伸出 RoBERTa、ALBERT、DistilBERT、ELECTRA、DeBERTa 等大量模型。它们有的改预训练数据，有的改目标函数，有的压缩参数，有的改注意力偏置。但它们都绕不开 BERT 开出的路：大规模未标注文本里有大量可迁移知识，Transformer encoder 可以把这些知识压进参数。&lt;/p&gt;
+&lt;p&gt;今天大语言模型更常使用 decoder-only 架构，但 BERT 在理解任务、检索、分类、信息抽取、嵌入模型里仍然非常重要。它不是被替代掉的旧模型，而是预训练表示学习的一个基础坐标。&lt;/p&gt;
+&lt;h2 id="读-bert-时该盯住什么"&gt;读 BERT 时该盯住什么
+&lt;/h2&gt;&lt;p&gt;我会把 BERT 分成三层读。第一层是结构：多层 Transformer encoder，双向 self-attention。第二层是输入格式：&lt;code&gt;[CLS]&lt;/code&gt;、&lt;code&gt;[SEP]&lt;/code&gt;、segment embedding、position embedding。第三层是训练范式：MLM/NSP 预训练，再全参数微调到下游任务。&lt;/p&gt;
+&lt;p&gt;如果只看结构，会觉得 BERT 只是 Transformer encoder；如果只看榜单，会觉得它只是更大模型。真正的关键在第三层：它让大量 NLP 任务共享同一套预训练表示。这个范式上的转向，才是 BERT 最长久的影响。&lt;/p&gt;
+&lt;h2 id="参考文献"&gt;参考文献
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;Jacob Devlin, Ming-Wei Chang, Kenton Lee, Kristina Toutanova. &lt;a class="link" href="https://arxiv.org/abs/1810.04805" target="_blank" rel="noopener"
+ &gt;BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding&lt;/a&gt;. NAACL, 2019.&lt;/li&gt;
+&lt;/ul&gt;</description></item><item><title>Transformer：把序列建模交给注意力</title><link>https://shiliumi.github.io/post/transformer-attention-is-all-you-need/</link><pubDate>Sat, 06 Jun 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/transformer-attention-is-all-you-need/</guid><description>&lt;img src="https://shiliumi.github.io/post/transformer-attention-is-all-you-need/paper-figure.png" alt="Featured image of post Transformer：把序列建模交给注意力" /&gt;&lt;p&gt;《Attention Is All You Need》最响的地方当然是标题：不再用 RNN，也不再靠卷积作为主干，而是把序列建模交给注意力。可如果只把它理解成“注意力替代循环”，还不够。论文真正厉害的是把并行计算、长距离依赖、编码器-解码器训练和表示混合，整理成一个可扩展的模块化结构。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Transformer 原论文 Figure 1" class="gallery-image" data-flex-basis="152px" data-flex-grow="63" height="1200" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://shiliumi.github.io/post/transformer-attention-is-all-you-need/paper-figure.png" width="760"&gt;&lt;/p&gt;
+&lt;p&gt;图：原论文 Figure 1，展示 Transformer 的编码器、解码器、残差归一化、多头注意力和前馈层。这里直接从论文 PDF 裁取。&lt;/p&gt;
+&lt;h2 id="为什么作者想摆脱循环"&gt;为什么作者想摆脱循环
+&lt;/h2&gt;&lt;p&gt;机器翻译里的经典 seq2seq 模型通常依赖 RNN 或 LSTM。它们按时间步处理序列，天然适合顺序数据，但也有明显瓶颈：训练难并行，远距离依赖要穿过很多时间步，长句子的表示容易拥挤。注意力机制在 Transformer 之前已经出现，用来让解码器查看源句不同位置；Transformer 的激进之处，是把注意力从辅助机制升成主干。&lt;/p&gt;
+&lt;p&gt;自注意力的直觉很简单：序列里的每个 token 都可以直接看其他 token，根据相关性聚合信息。这样，任意两个位置之间的路径长度很短，不需要像 RNN 那样一步步传。更重要的是，同一层里所有位置的注意力可以并行计算，极大适合 GPU/TPU。&lt;/p&gt;
+&lt;p&gt;这也是论文标题里 “all you need” 的底气来源。作者不是说卷积和循环永远没用，而是在当时的机器翻译任务上证明：只靠注意力、前馈层、残差和位置编码，就能得到更好的质量和更高的训练效率。&lt;/p&gt;
+&lt;h2 id="figure-1左边编码右边解码"&gt;Figure 1：左边编码，右边解码
+&lt;/h2&gt;&lt;p&gt;原论文 Figure 1 左边是 encoder stack，右边是 decoder stack。编码器每层有两个子层：multi-head self-attention 和 position-wise feed-forward network。每个子层外面都有 residual connection 和 layer normalization。解码器多了一个 masked multi-head self-attention，以及一个对编码器输出做注意力的 encoder-decoder attention。&lt;/p&gt;
+&lt;p&gt;图里容易忽略的是 “N×”。论文基本模型堆叠 6 层编码器和 6 层解码器。每层结构相同，但参数不共享。也就是说，Transformer 不是一个单层注意力模块，而是把注意力和前馈网络交替堆叠。注意力负责在 token 之间交换信息，前馈层负责对每个位置做非线性变换。&lt;/p&gt;
+&lt;p&gt;解码器的 mask 很关键。训练翻译时，目标句已知，但模型预测第 t 个词时不能偷看 t 之后的词。masked self-attention 把未来位置遮掉，保持自回归性质。这个小细节后来在 GPT 类模型里成为核心结构。&lt;/p&gt;
+&lt;h2 id="scaled-dot-product-attention-为什么要缩放"&gt;Scaled Dot-Product Attention 为什么要缩放
+&lt;/h2&gt;&lt;p&gt;论文里的注意力公式是 &lt;code&gt;softmax(QK^T / sqrt(d_k))V&lt;/code&gt;。查询 Q 和键 K 做点积，得到每个位置对其他位置的相关性，再用 softmax 转成权重，最后加权求和值 V。除以 &lt;code&gt;sqrt(d_k)&lt;/code&gt; 是为了避免维度变大时点积数值过大，softmax 进入饱和区，梯度变小。&lt;/p&gt;
+&lt;p&gt;这个缩放看似小，却很有工程味。注意力不是抽象相似度就完事，它要在深层网络里稳定训练。维度、初始化、归一化、残差都会影响数值范围。Transformer 能训起来，不是因为注意力概念本身浪漫，而是这些细节一起把数值管住了。&lt;/p&gt;
+&lt;p&gt;多头注意力则把表示空间分成多个 head。每个 head 学一套投影，在不同子空间里计算注意力，最后拼接并线性变换。直觉上，不同 head 可以关注不同关系：局部短语、长距离依赖、语法角色、对齐模式。论文没有神化 head，只是证明多头比单个大头更有效。&lt;/p&gt;
+&lt;h2 id="位置编码补上顺序信息"&gt;位置编码补上顺序信息
+&lt;/h2&gt;&lt;p&gt;纯注意力本身对位置置换不敏感。如果不告诉模型顺序，“我喜欢你”和“你喜欢我”可能只是一袋 token。Transformer 用 positional encoding 把位置信息加到输入 embedding 上。原论文采用正弦余弦位置编码，不同维度对应不同频率。&lt;/p&gt;
+&lt;p&gt;为什么用固定正弦而不是学习位置向量？论文说两者效果接近，但正弦编码可能更容易外推到训练时没见过的长度。今天很多模型使用可学习位置编码、相对位置编码、RoPE 等变体。回头看原文，可以把它理解成第一版简洁方案：让模型知道顺序，但不重新引入循环。&lt;/p&gt;
+&lt;p&gt;这里有个很好的读法：Transformer 去掉了 RNN 的顺序计算，但没有去掉顺序本身。它只是把顺序从计算流程里拿出来，改成输入表示的一部分。&lt;/p&gt;
+&lt;h2 id="实验结果和计算复杂度"&gt;实验结果和计算复杂度
+&lt;/h2&gt;&lt;p&gt;论文在 WMT 2014 英德、英法翻译上取得强结果，同时训练成本更低。这个结果的说服力来自两个方面。第一，BLEU 分数高，说明纯注意力结构不是只适合玩具任务。第二，训练效率明显好，说明并行化优势在大规模任务上能转化为真实收益。&lt;/p&gt;
+&lt;p&gt;论文还比较了 self-attention、recurrent、convolutional 在每层复杂度、并行度和最长路径长度上的差异。自注意力对序列长度 n 的复杂度是 &lt;code&gt;O(n^2 d)&lt;/code&gt;，短中序列很合适，但长序列会贵。这也解释了后来 Longformer、Performer、FlashAttention、稀疏注意力等工作的出现。Transformer 解决了一批问题，也打开了新的计算瓶颈。&lt;/p&gt;
+&lt;p&gt;读实验时不要只看“Transformer 赢了 RNN”。更值得看的是它怎么用结构适配硬件：所有位置并行算注意力，矩阵乘法密集，训练吞吐高。这种硬件友好性，是它后来扩展到大模型的重要原因。&lt;/p&gt;
+&lt;h2 id="今天再看-transformer"&gt;今天再看 Transformer
+&lt;/h2&gt;&lt;p&gt;Transformer 后来成了 NLP、视觉、多模态甚至生成模型的通用骨架，但原论文其实很克制。它解决的是机器翻译里的序列到序列问题，使用 encoder-decoder 结构。后来 BERT 主要继承 encoder，GPT 主要继承 masked decoder，ViT 把 encoder 搬到图像 patch 上。很多分支都能在 Figure 1 里找到源头。&lt;/p&gt;
+&lt;p&gt;复现时，最容易漏掉的是残差、LayerNorm、mask 和位置编码这些“胶水层”。只写一个 attention 函数并不等于实现 Transformer。真正的 Transformer 是注意力、前馈层、残差归一化、dropout、label smoothing、学习率 warmup 一起工作的训练系统。&lt;/p&gt;
+&lt;p&gt;这篇论文之所以耐读，是因为它不只是换了一个模块，而是换了一种序列建模的组织方式。循环把顺序写进计算过程，Transformer 把关系交给注意力，把顺序写进位置表示，把效率交给并行矩阵计算。这个转向，后来影响远远超过机器翻译本身。&lt;/p&gt;
+&lt;h2 id="参考文献"&gt;参考文献
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;Ashish Vaswani et al. &lt;a class="link" href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener"
+ &gt;Attention Is All You Need&lt;/a&gt;. NeurIPS, 2017.&lt;/li&gt;
+&lt;/ul&gt;</description></item><item><title>Vision Transformer：把图像切成词以后发生了什么</title><link>https://shiliumi.github.io/post/vit-image-patches-transformer/</link><pubDate>Sat, 06 Jun 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/vit-image-patches-transformer/</guid><description>&lt;img src="https://shiliumi.github.io/post/vit-image-patches-transformer/paper-figure.png" alt="Featured image of post Vision Transformer：把图像切成词以后发生了什么" /&gt;&lt;p&gt;Vision Transformer 这篇论文的核心动作非常大胆：把图像切成固定大小 patch，把每个 patch 当成一个 token，然后几乎原封不动地使用 Transformer encoder 做图像分类。它看上去简单，甚至有点“偷懒”，但真正的结论并不简单：当预训练数据足够大时，Transformer 可以在视觉任务上摆脱 CNN 的强归纳偏置。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Vision Transformer 原论文 Figure 1" class="gallery-image" data-flex-basis="340px" data-flex-grow="141" height="860" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://shiliumi.github.io/post/vit-image-patches-transformer/paper-figure.png" srcset="https://shiliumi.github.io/post/vit-image-patches-transformer/paper-figure_hu_caf1e03d9e534d23.png 800w, https://shiliumi.github.io/post/vit-image-patches-transformer/paper-figure.png 1220w" width="1220"&gt;&lt;/p&gt;
+&lt;p&gt;图：原论文 Figure 1，展示 ViT 如何把图像 patch 投影为 token 序列，并送入 Transformer encoder。这里直接从论文 PDF 裁取。&lt;/p&gt;
+&lt;h2 id="为什么这件事当时不算显然"&gt;为什么这件事当时不算显然
+&lt;/h2&gt;&lt;p&gt;在 ViT 之前，CNN 几乎是视觉主干的默认选择。卷积有强归纳偏置：局部连接、权值共享、平移等变性。这些偏置非常适合图像，也让模型在中等规模数据上更容易泛化。Transformer 在 NLP 里很强，但文本 token 天然是一维序列；图像是二维网格，直接套 Transformer 会不会太浪费？会不会因为缺少卷积偏置而学不动？&lt;/p&gt;
+&lt;p&gt;ViT 的答案有条件：如果只在 ImageNet-1k 这样的中等数据上从头训练，ViT 不一定比同规模 CNN 好；但如果在 JFT-300M 这类超大数据上预训练，再迁移到下游视觉任务，ViT 可以达到甚至超过强 CNN。也就是说，论文不是简单宣称“Transformer 比 CNN 强”，而是在说：数据规模足够大时，弱归纳偏置不再一定是劣势。&lt;/p&gt;
+&lt;p&gt;这个结论很重要。CNN 把很多视觉先验写死在结构里，样本效率高；ViT 让模型从数据里学更多结构，早期更吃数据，但扩展性强。&lt;/p&gt;
+&lt;h2 id="figure-1把图像变成序列"&gt;Figure 1：把图像变成序列
+&lt;/h2&gt;&lt;p&gt;原论文 Figure 1 画得很清楚。输入图像被切成固定大小 patch，比如 &lt;code&gt;16x16&lt;/code&gt;。每个 patch 展平后通过线性层投影成 D 维 embedding。然后在序列前加一个可学习的 class token，再加位置编码，送入标准 Transformer encoder。最后取 class token 的输出做分类。&lt;/p&gt;
+&lt;p&gt;这里最关键的不是 Transformer encoder 本身，而是 patch embedding。它相当于把 &lt;code&gt;H x W x C&lt;/code&gt; 的图像变成长度为 &lt;code&gt;N = HW / P^2&lt;/code&gt; 的 token 序列。patch size P 越小，序列越长，空间细节越多，但注意力计算更贵；P 越大，序列更短，计算省，但细粒度信息损失更多。ViT-B/16 里的 &lt;code&gt;/16&lt;/code&gt; 指的就是 patch 大小。&lt;/p&gt;
+&lt;p&gt;class token 则借鉴了 BERT 的 &lt;code&gt;[CLS]&lt;/code&gt;。它不对应某个图像块，而是在多层 self-attention 中聚合全局信息，最后用于分类。位置编码用来告诉模型 patch 的空间位置。没有位置编码，patch 序列就会丢掉二维布局。&lt;/p&gt;
+&lt;h2 id="vit-到底少了什么视觉先验"&gt;ViT 到底少了什么视觉先验
+&lt;/h2&gt;&lt;p&gt;ViT 和 CNN 最大的差异，是它没有把局部性和权值共享写得那么强。CNN 的同一个卷积核会在整张图上滑动，天然偏向局部纹理；ViT 的每个 patch token 经过线性投影后，第一层 self-attention 就可以看到所有 patch。它更自由，但也更需要数据告诉它哪些局部结构可靠。&lt;/p&gt;
+&lt;p&gt;这解释了论文里的一个重要现象：在较小数据集上，ViT 表现不如 ResNet 等 CNN；在大规模预训练后，ViT 的表现明显提升。归纳偏置和数据规模之间有交换关系。强偏置帮助小数据泛化，弱偏置给大数据扩展留下空间。&lt;/p&gt;
+&lt;p&gt;论文还比较了 hybrid 模型，也就是先用 CNN 提取特征，再把特征图切成 token 输入 Transformer。这个方向说明作者并不是把 CNN 一脚踢开，而是在测试不同程度的视觉先验。后来很多模型也沿着混合路线走过一段，比如 ConvStem、Swin Transformer 的局部窗口注意力等。&lt;/p&gt;
+&lt;h2 id="计算代价在哪里"&gt;计算代价在哪里
+&lt;/h2&gt;&lt;p&gt;自注意力的复杂度随 token 数平方增长。对图像来说，如果 patch 太小，token 数会迅速变多。&lt;code&gt;224x224&lt;/code&gt; 图像用 &lt;code&gt;16x16&lt;/code&gt; patch 得到 196 个 patch，加 class token 是 197，计算还可控；如果改成 &lt;code&gt;8x8&lt;/code&gt; patch，token 数会变成 784，注意力成本大幅增加。&lt;/p&gt;
+&lt;p&gt;所以 patch size 是 ViT 里非常关键的旋钮。它不只是分辨率选择，而是在精度和计算之间做交易。论文中的 ViT-B/16、ViT-B/32、ViT-L/16 等命名，都反映了模型规模和 patch 大小的组合。更小 patch 通常更强，但也更贵。&lt;/p&gt;
+&lt;p&gt;这也解释了后续视觉 Transformer 的许多改进：Swin 用窗口注意力降低复杂度，PVT 做金字塔结构，DeiT 研究数据高效训练，MAE 用自监督重建提升预训练效率。ViT 打开了门，但第一版并不解决所有视觉计算问题。&lt;/p&gt;
+&lt;h2 id="实验结论别读反"&gt;实验结论别读反
+&lt;/h2&gt;&lt;p&gt;ViT 论文最容易被读反的一点，是把它当成“CNN 已经没用了”。原文并没有这么简单。作者明确展示，在没有大规模预训练时，ViT 的表现并不一定好；而当预训练数据增大，ViT 的扩展性开始显现。它挑战的是“视觉模型必须依赖卷积主干”这个默认假设，而不是否认卷积在小数据和高效场景里的价值。&lt;/p&gt;
+&lt;p&gt;论文在 ImageNet、CIFAR、VTAB 等任务上报告迁移结果，并比较不同模型大小。真正值得看的趋势是：模型越大、预训练数据越大，ViT 越能发挥。这个趋势后来和大模型时代的经验合流：更通用、更少硬编码偏置的架构，往往在海量数据和算力下更有上限。&lt;/p&gt;
+&lt;p&gt;但这也意味着成本。ViT 的成功条件更依赖预训练资源。对于普通项目，直接从头训练一个 ViT 未必划算，使用预训练权重、蒸馏或更数据高效的变体通常更现实。&lt;/p&gt;
+&lt;h2 id="今天复现时最该动的旋钮"&gt;今天复现时最该动的旋钮
+&lt;/h2&gt;&lt;p&gt;如果自己实现 ViT，最值得观察的是 patch size、embedding dim、depth、heads 和预训练数据。写代码并不难：切 patch、线性投影、加 class token 和位置编码、送入 Transformer encoder。难的是让模型在有限数据上泛化。&lt;/p&gt;
+&lt;p&gt;位置编码在微调高分辨率图像时也要处理。因为 patch 数变了，位置编码长度也变了，通常需要插值。这是很多复现细节里容易漏掉的一步。另一个细节是分类头：预训练时可能用 MLP head，微调时常换成线性头，论文里也提到这种设置差异。&lt;/p&gt;
+&lt;p&gt;ViT 最有启发的地方，是它把图像建模重新表述成序列建模。它没有发明复杂视觉模块，而是问了一个更根本的问题：如果把图像切成 token，标准 Transformer 能走多远？答案是，在足够数据面前，能走得很远。&lt;/p&gt;
+&lt;h2 id="参考文献"&gt;参考文献
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;Alexey Dosovitskiy et al. &lt;a class="link" href="https://arxiv.org/abs/2010.11929" target="_blank" rel="noopener"
+ &gt;An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale&lt;/a&gt;. ICLR, 2021.&lt;/li&gt;
+&lt;/ul&gt;</description></item></channel></rss>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>NLP on 小翟的个人博客</title><link>https://shiliumi.github.io/tags/nlp/</link><description>Recent content in NLP on 小翟的个人博客</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sun, 07 Jun 2026 14:00:56 +0800</lastBuildDate><atom:link href="https://shiliumi.github.io/tags/nlp/index.xml" rel="self" type="application/rss+xml"/><item><title>BERT：双向预训练如何改变 NLP 的使用方式</title><link>https://shiliumi.github.io/post/bert-bidirectional-transformers/</link><pubDate>Sat, 06 Jun 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/bert-bidirectional-transformers/</guid><description>&lt;img src="https://shiliumi.github.io/post/bert-bidirectional-transformers/paper-figure.png" alt="Featured image of post BERT：双向预训练如何改变 NLP 的使用方式" /&gt;&lt;p&gt;BERT 的影响很大，不只是因为它在 GLUE、SQuAD 等榜单上刷新结果，更因为它改变了 NLP 模型的使用方式。以前很多任务会各自设计结构；BERT 把一个大规模预训练 Transformer encoder 拿出来，然后通过很小的任务头微调，成了后来预训练-微调范式的标准模板。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="BERT 原论文 Figure 1" class="gallery-image" data-flex-basis="423px" data-flex-grow="176" height="850" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://shiliumi.github.io/post/bert-bidirectional-transformers/paper-figure.png" srcset="https://shiliumi.github.io/post/bert-bidirectional-transformers/paper-figure_hu_65dce6b6e0d90b84.png 800w, https://shiliumi.github.io/post/bert-bidirectional-transformers/paper-figure.png 1500w" width="1500"&gt;&lt;/p&gt;
+&lt;p&gt;图：原论文 Figure 1，展示 BERT 的预训练和微调流程。这里直接从论文 PDF 裁取。&lt;/p&gt;
+&lt;h2 id="bert-的问题意识"&gt;BERT 的问题意识
+&lt;/h2&gt;&lt;p&gt;BERT 之前，ELMo 已经用语言模型预训练提供上下文表示，GPT 也展示了 Transformer decoder 预训练再微调的力量。但 GPT 是从左到右的语言模型，每个 token 只能看左侧上下文。很多理解任务需要双向上下文，比如判断一个词在句子里的含义、抽取问答 span、做自然语言推理。BERT 的核心问题就是：能不能预训练一个真正双向的深层表示？&lt;/p&gt;
+&lt;p&gt;直接用普通语言模型不行，因为如果每个位置都能看到自己，预测任务会泄漏答案。BERT 的办法是 Masked Language Model：随机遮住一部分 token，让模型根据左右上下文预测它们。这样 encoder 可以双向看上下文，又不会直接看到被预测词。&lt;/p&gt;
+&lt;p&gt;这个思路很朴素，但威力很大。它把 Transformer encoder 从一个任务结构，变成了通用文本表示学习器。&lt;/p&gt;
+&lt;h2 id="figure-1预训练和微调的同构"&gt;Figure 1：预训练和微调的同构
+&lt;/h2&gt;&lt;p&gt;原论文 Figure 1 左边是 pre-training，右边是 fine-tuning。两边都使用同一个 BERT 主体，区别主要在输入、输出头和损失。预训练时，模型处理未标注句子对，做 MLM 和 NSP；微调时，在同一个编码器上接一个很薄的任务层，比如分类、序列标注或问答起止位置预测。&lt;/p&gt;
+&lt;p&gt;这张图真正重要的是“结构尽量不变”。以前很多 NLP 任务需要定制模型：句子分类一个结构，问答一个结构，序列标注另一个结构。BERT 把它们统一成“把任务格式塞进同一个输入表示，再微调整个模型”。这极大降低了迁移成本。&lt;/p&gt;
+&lt;p&gt;图里还有 &lt;code&gt;[CLS]&lt;/code&gt; 和 &lt;code&gt;[SEP]&lt;/code&gt;。&lt;code&gt;[CLS]&lt;/code&gt; 放在序列开头，最终表示常用于句子级分类；&lt;code&gt;[SEP]&lt;/code&gt; 分隔句子 A 和句子 B。BERT 的输入表示由 token embedding、segment embedding 和 position embedding 相加得到。这个输入格式后来几乎成了 encoder 类 NLP 模型的基本语言。&lt;/p&gt;
+&lt;h2 id="mlm-的细节很关键"&gt;MLM 的细节很关键
+&lt;/h2&gt;&lt;p&gt;BERT 随机选择 15% token 作为预测目标，但并不是全部替换成 &lt;code&gt;[MASK]&lt;/code&gt;。其中 80% 替换为 &lt;code&gt;[MASK]&lt;/code&gt;，10% 替换为随机词，10% 保持原词不变。这个设计是为了解决预训练和微调之间的不一致：微调时真实输入里没有 &lt;code&gt;[MASK]&lt;/code&gt;，如果预训练只见 &lt;code&gt;[MASK]&lt;/code&gt;，会有分布差异。&lt;/p&gt;
+&lt;p&gt;这个细节很能体现论文的工程判断。MLM 不是随便遮词，它要同时满足三个目标：制造可监督信号，允许双向上下文，减少 &lt;code&gt;[MASK]&lt;/code&gt; 带来的预训练-微调差距。&lt;/p&gt;
+&lt;p&gt;MLM 也有代价。每个 batch 里只有 15% token 贡献预测损失，预训练效率不如自回归语言模型直接预测每个 token。后来很多模型围绕这个问题继续改，比如 RoBERTa 调整预训练策略，ELECTRA 用 replaced token detection 提高样本效率。BERT 是范式起点，不是终点。&lt;/p&gt;
+&lt;h2 id="nsp-的角色和争议"&gt;NSP 的角色和争议
+&lt;/h2&gt;&lt;p&gt;BERT 的第二个预训练任务是 Next Sentence Prediction。模型看到句子 A 和句子 B，要判断 B 是否真实接在 A 后面。作者希望这个任务帮助句子对关系建模，比如自然语言推理和问答。&lt;/p&gt;
+&lt;p&gt;后来研究对 NSP 的必要性提出了质疑。RoBERTa 去掉 NSP 后效果仍然很好，甚至更强。这并不削弱 BERT 原论文的价值，反而说明预训练范式还在快速摸索。读 BERT 时，可以把 NSP 看成当时为了句子级任务加入的一个尝试，而不是永恒标准。&lt;/p&gt;
+&lt;p&gt;更重要的是，BERT 把“预训练目标设计”变成了 NLP 研究的核心问题之一。模型结构之外，怎么构造自监督任务、怎么采样数据、怎么处理输入格式，都开始直接影响下游表现。&lt;/p&gt;
+&lt;h2 id="模型尺寸和微调"&gt;模型尺寸和微调
+&lt;/h2&gt;&lt;p&gt;论文主要报告 BERT_BASE 和 BERT_LARGE。BERT_BASE 有 12 层、768 hidden size、12 个 attention heads，大约 110M 参数；BERT_LARGE 有 24 层、1024 hidden size、16 heads，大约 340M 参数。这个规模在当时已经很大，但和后来的大语言模型相比还算克制。&lt;/p&gt;
+&lt;p&gt;微调时，BERT 通常不冻结主干，而是让所有参数一起更新。对句子分类任务，用 &lt;code&gt;[CLS]&lt;/code&gt; 表示接分类层；对 SQuAD 这类抽取式问答，预测每个 token 作为 start/end 的概率；对序列标注，每个 token 输出标签。统一主干，不同任务头，这就是 BERT 最实用的地方。&lt;/p&gt;
+&lt;p&gt;不过微调并不总是稳定。学习率、batch size、训练轮数、随机种子都会影响结果。小数据任务上，过拟合和灾难性遗忘也可能出现。BERT 论文展示了范式，但实际使用还需要很多调参经验。&lt;/p&gt;
+&lt;h2 id="实验结果背后的转向"&gt;实验结果背后的转向
+&lt;/h2&gt;&lt;p&gt;BERT 在 GLUE、MultiNLI、SQuAD 等任务上的结果非常亮眼。单看榜单可以说它强，但更深的变化是：NLP 模型的工作重心从“为每个任务设计结构”转向“预训练一个强通用表示，再用任务数据轻量适配”。这让下游任务开发方式发生了变化。&lt;/p&gt;
+&lt;p&gt;这种变化后来延伸出 RoBERTa、ALBERT、DistilBERT、ELECTRA、DeBERTa 等大量模型。它们有的改预训练数据，有的改目标函数，有的压缩参数，有的改注意力偏置。但它们都绕不开 BERT 开出的路：大规模未标注文本里有大量可迁移知识，Transformer encoder 可以把这些知识压进参数。&lt;/p&gt;
+&lt;p&gt;今天大语言模型更常使用 decoder-only 架构，但 BERT 在理解任务、检索、分类、信息抽取、嵌入模型里仍然非常重要。它不是被替代掉的旧模型，而是预训练表示学习的一个基础坐标。&lt;/p&gt;
+&lt;h2 id="读-bert-时该盯住什么"&gt;读 BERT 时该盯住什么
+&lt;/h2&gt;&lt;p&gt;我会把 BERT 分成三层读。第一层是结构：多层 Transformer encoder，双向 self-attention。第二层是输入格式：&lt;code&gt;[CLS]&lt;/code&gt;、&lt;code&gt;[SEP]&lt;/code&gt;、segment embedding、position embedding。第三层是训练范式：MLM/NSP 预训练，再全参数微调到下游任务。&lt;/p&gt;
+&lt;p&gt;如果只看结构，会觉得 BERT 只是 Transformer encoder；如果只看榜单，会觉得它只是更大模型。真正的关键在第三层：它让大量 NLP 任务共享同一套预训练表示。这个范式上的转向，才是 BERT 最长久的影响。&lt;/p&gt;
+&lt;h2 id="参考文献"&gt;参考文献
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;Jacob Devlin, Ming-Wei Chang, Kenton Lee, Kristina Toutanova. &lt;a class="link" href="https://arxiv.org/abs/1810.04805" target="_blank" rel="noopener"
+ &gt;BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding&lt;/a&gt;. NAACL, 2019.&lt;/li&gt;
+&lt;/ul&gt;</description></item></channel></rss>

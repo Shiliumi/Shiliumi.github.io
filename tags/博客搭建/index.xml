@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>博客搭建 on 小翟的个人博客</title><link>https://shiliumi.github.io/tags/%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA/</link><description>Recent content in 博客搭建 on 小翟的个人博客</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sun, 31 May 2026 22:56:50 +0800</lastBuildDate><atom:link href="https://shiliumi.github.io/tags/%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA/index.xml" rel="self" type="application/rss+xml"/><item><title>Hugo + Stack 博客搭建记录：从项目初始化到本地预览</title><link>https://shiliumi.github.io/post/hugo-stack-site-setup/</link><pubDate>Sun, 31 May 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/hugo-stack-site-setup/</guid><description>&lt;img src="https://shiliumi.github.io/post/hugo-stack-site-setup/cover.jpg" alt="Featured image of post Hugo + Stack 博客搭建记录：从项目初始化到本地预览" /&gt;&lt;p&gt;这篇文章记录本站基础搭建阶段做过的主要事情。它不是一份完全通用的教程，而是一次实际工程过程的复盘：目标是把 Stack 主题从默认示例站点改造成一个可以继续维护的个人博客。&lt;/p&gt;
+&lt;h2 id="选择-hugo-extended-和-stack"&gt;选择 Hugo Extended 和 Stack
+&lt;/h2&gt;&lt;p&gt;本站使用 &lt;strong&gt;Hugo Extended&lt;/strong&gt; 作为静态站点生成器，主题选择 &lt;strong&gt;Stack&lt;/strong&gt;。Hugo 的优势是构建速度快、部署结果简单，最终产物就是静态文件；Stack 的优势是文章列表、侧边栏、归档、搜索、分类和标签这些博客核心功能已经比较完整。&lt;/p&gt;
+&lt;p&gt;本地开发时主要依赖 Hugo server：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-powershell" data-lang="powershell"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;hugo server -D --renderToMemory --bind &lt;span style="color:#ae81ff"&gt;127.0&lt;/span&gt;.0.1 --port &lt;span style="color:#ae81ff"&gt;1313&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;-D&lt;/code&gt; 用于显示草稿文章，&lt;code&gt;--renderToMemory&lt;/code&gt; 让预览过程尽量不污染输出目录。正式构建时再使用 Hugo 的构建命令生成静态页面。&lt;/p&gt;
+&lt;h2 id="基础配置"&gt;基础配置
+&lt;/h2&gt;&lt;p&gt;基础配置主要放在 &lt;code&gt;hugo.toml&lt;/code&gt; 中。本站首先完成了几项全局设置：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;设置站点标题为“小翟的个人博客”&lt;/li&gt;
+&lt;li&gt;设置默认语言为中文&lt;/li&gt;
+&lt;li&gt;启用 &lt;code&gt;enableGitInfo&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;配置 &lt;code&gt;frontmatter.lastmod&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;设置 Stack 主题&lt;/li&gt;
+&lt;li&gt;设置浏览器标签页图标&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;其中更新时间配置比较关键：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-toml" data-lang="toml"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;enableGitInfo&lt;/span&gt; = &lt;span style="color:#66d9ef"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;[&lt;span style="color:#a6e22e"&gt;frontmatter&lt;/span&gt;]
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;lastmod&lt;/span&gt; = [&lt;span style="color:#e6db74"&gt;&amp;#39;:git&amp;#39;&lt;/span&gt;, &lt;span style="color:#e6db74"&gt;&amp;#39;:fileModTime&amp;#39;&lt;/span&gt;, &lt;span style="color:#e6db74"&gt;&amp;#39;:default&amp;#39;&lt;/span&gt;]
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;这样文章更新时间会优先读取 Git 提交时间。如果没有 Git 信息，再回退到本地文件修改时间，最后才使用默认时间。这个配置后续配合 GitHub Actions 部署，可以让线上页面也显示更接近真实变更历史的更新时间。&lt;/p&gt;
+&lt;h2 id="中文导航"&gt;中文导航
+&lt;/h2&gt;&lt;p&gt;主题默认菜单更偏示例站点，所以本站将左侧导航统一成中英双语形式：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;主页 | Home&lt;/li&gt;
+&lt;li&gt;分类&amp;amp;标签 | Cats&amp;amp;Tags&lt;/li&gt;
+&lt;li&gt;归档 | Archives&lt;/li&gt;
+&lt;li&gt;搜索 | Search&lt;/li&gt;
+&lt;li&gt;相关 | Related&lt;/li&gt;
+&lt;li&gt;技术链接 | Links&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这样做有两个好处：中文用户能直接理解每一栏的作用，同时保留英文名称，方便和主题原本的功能概念对应。&lt;/p&gt;
+&lt;h2 id="头像和个人信息"&gt;头像和个人信息
+&lt;/h2&gt;&lt;p&gt;Stack 的左侧栏会读取 &lt;code&gt;params.sidebar&lt;/code&gt; 中的头像和简介配置。本站将头像放入 Hugo 的 assets 管线中，并配置为：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-toml" data-lang="toml"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;[&lt;span style="color:#a6e22e"&gt;params&lt;/span&gt;.&lt;span style="color:#a6e22e"&gt;sidebar&lt;/span&gt;]
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;avatar&lt;/span&gt; = &lt;span style="color:#e6db74"&gt;&amp;#39;img/avatar.avif&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;&lt;span style="color:#a6e22e"&gt;subtitle&lt;/span&gt; = &lt;span style="color:#e6db74"&gt;&amp;#39;欢迎来到我的网站，此博客由【Hugo + Stack】进行搭建，主要分享个人生活和学习笔记&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;使用 assets 而不是随手放在任意目录，是为了让 Hugo 能稳定找到资源，并在构建时生成正确路径。&lt;/p&gt;
+&lt;h2 id="分类标签和内容组织"&gt;分类、标签和内容组织
+&lt;/h2&gt;&lt;p&gt;文章放在 &lt;code&gt;content/post&lt;/code&gt; 下，每篇文章通过 front matter 设置分类和标签。例如本站后续会将 Hugo 搭建记录统一归到 &lt;code&gt;Hugo&lt;/code&gt; 分类下，并使用 &lt;code&gt;博客搭建&lt;/code&gt;、&lt;code&gt;Stack&lt;/code&gt;、&lt;code&gt;静态站点&lt;/code&gt; 等标签做更细的索引。&lt;/p&gt;
+&lt;p&gt;分类页已经改成“上方分类、下方标签”的结构。这样内容多起来以后，分类用于表达主题方向，标签用于表达更细的技术点。&lt;/p&gt;
+&lt;h2 id="本地预览和检查"&gt;本地预览和检查
+&lt;/h2&gt;&lt;p&gt;每次改动后，最基本的检查是先跑一次构建：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"&gt;&lt;code class="language-powershell" data-lang="powershell"&gt;&lt;span style="display:flex;"&gt;&lt;span&gt;hugo --minify
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;如果模板、资源路径或 front matter 写错，构建阶段通常会先暴露问题。构建通过后，再打开本地服务检查首页、文章页、分类页、归档页和搜索页是否都能正常工作。&lt;/p&gt;
+&lt;h2 id="小结"&gt;小结
+&lt;/h2&gt;&lt;p&gt;基础搭建阶段的重点不是一次性加很多功能，而是先把博客从主题演示站点变成自己的站点。标题、头像、导航、分类、联系方式、更新时间和本地构建流程都稳定以后，再继续叠加播放器、PJAX、动态背景、Live2D 等个性化功能会更稳。&lt;/p&gt;</description></item></channel></rss>

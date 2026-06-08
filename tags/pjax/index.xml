@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>PJAX on 小翟的个人博客</title><link>https://shiliumi.github.io/tags/pjax/</link><description>Recent content in PJAX on 小翟的个人博客</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sun, 31 May 2026 22:56:50 +0800</lastBuildDate><atom:link href="https://shiliumi.github.io/tags/pjax/index.xml" rel="self" type="application/rss+xml"/><item><title>Stack 主题改造记录：播放器、PJAX、特效与自动部署</title><link>https://shiliumi.github.io/post/hugo-stack-customization-deploy/</link><pubDate>Sun, 31 May 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/hugo-stack-customization-deploy/</guid><description>&lt;img src="https://shiliumi.github.io/post/hugo-stack-customization-deploy/cover.jpg" alt="Featured image of post Stack 主题改造记录：播放器、PJAX、特效与自动部署" /&gt;&lt;p&gt;在基础站点可以正常运行之后，本站开始进行 Stack 主题的个性化改造。这个阶段的目标不是简单堆功能，而是在尽量不破坏主题原有结构的前提下，让博客更像一个长期使用的个人站点。&lt;/p&gt;
+&lt;h2 id="音乐播放器"&gt;音乐播放器
+&lt;/h2&gt;&lt;p&gt;本站接入了 APlayer 和 Meting，用网易云歌单作为音乐来源。播放器放在页脚自定义模板中，并使用固定模式显示，避免占用文章主体空间。&lt;/p&gt;
+&lt;p&gt;核心思路是让播放器作为全站组件加载，而不是每篇文章单独引入。这样维护起来更简单，后续更换歌单时只需要修改一处配置。&lt;/p&gt;
+&lt;h2 id="pjax-无刷新切换"&gt;PJAX 无刷新切换
+&lt;/h2&gt;&lt;p&gt;PJAX 能让站内页面切换更顺滑，但它也是最容易引入问题的功能之一。因为页面主体被替换后，很多原本只在首屏加载时执行一次的脚本不会自动重新初始化。&lt;/p&gt;
+&lt;p&gt;本站接入 PJAX 后，重点处理了这些组件的重新初始化：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;文章目录折叠与展开&lt;/li&gt;
+&lt;li&gt;代码块过长折叠&lt;/li&gt;
+&lt;li&gt;返回顶部按钮&lt;/li&gt;
+&lt;li&gt;动态背景&lt;/li&gt;
+&lt;li&gt;底部小鱼特效&lt;/li&gt;
+&lt;li&gt;Live2D 看板娘&lt;/li&gt;
+&lt;li&gt;右侧时钟组件&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;对于这类脚本，比较稳的方式是把初始化逻辑封装成函数，并在 PJAX 完成后再次调用。同时需要避免重复绑定事件，否则页面切换几次之后就会出现性能下降、重复监听、按钮失效等问题。&lt;/p&gt;
+&lt;h2 id="文章更新时间"&gt;文章更新时间
+&lt;/h2&gt;&lt;p&gt;本站使用 Hugo 的 &lt;code&gt;enableGitInfo&lt;/code&gt; 和 &lt;code&gt;frontmatter.lastmod&lt;/code&gt; 来显示文章最后更新时间。文章页和列表页都可以展示更新时间，让读者知道内容是否近期维护过。&lt;/p&gt;
+&lt;p&gt;在部署环境中还需要注意 GitHub Actions 的 checkout 深度。如果只拉取浅克隆，Hugo 可能拿不到完整 Git 信息。因此部署流程中需要保证 checkout 能提供足够的提交历史。&lt;/p&gt;
+&lt;h2 id="代码块体验"&gt;代码块体验
+&lt;/h2&gt;&lt;p&gt;为了让技术文章更易读，代码块做了两处改造：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;使用 macOS 风格的代码块顶部装饰&lt;/li&gt;
+&lt;li&gt;对过长代码块默认折叠，点击按钮后展开&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这类改造要注意不要影响复制代码，也不要让遮罩层挡住正常滚动。最终实现时把逻辑限定在 &lt;code&gt;.article-content .highlight&lt;/code&gt; 内，避免误伤主题其他区域。&lt;/p&gt;
+&lt;h2 id="返回顶部和右侧栏"&gt;返回顶部和右侧栏
+&lt;/h2&gt;&lt;p&gt;返回顶部按钮被挂载到右侧栏，而不是整个网页最右侧。这样按钮位置更贴近文章内容，不会在宽屏下离阅读区域太远。&lt;/p&gt;
+&lt;p&gt;右侧栏后来又加入了三个首页组件：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;时钟&lt;/li&gt;
+&lt;li&gt;搜索框&lt;/li&gt;
+&lt;li&gt;归档&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这些组件都使用 Stack 的 widget 机制挂载，避免直接改主题源码。后续升级主题时，只要自定义 partial 和配置还在，迁移成本会低一些。&lt;/p&gt;
+&lt;h2 id="动态效果"&gt;动态效果
+&lt;/h2&gt;&lt;p&gt;本站目前加入了动态背景、底部小鱼和 Live2D 看板娘。引入这些效果时，最重要的是控制交互边界：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;背景层不能挡住鼠标点击&lt;/li&gt;
+&lt;li&gt;小鱼特效不能抢占明暗切换按钮&lt;/li&gt;
+&lt;li&gt;Live2D 模型需要避免加载过慢导致空白&lt;/li&gt;
+&lt;li&gt;大模型资源尽量使用 CDN 或压缩后的纹理&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这次调试中，Live2D 模型出现过“透明空白”的情况，最后确认和加载速度、模型纹理资源有关。后续将模型资源独立托管，并对纹理做了无损 WebP 优化，加载体验会更稳定。&lt;/p&gt;
+&lt;h2 id="github-pages-自动部署"&gt;GitHub Pages 自动部署
+&lt;/h2&gt;&lt;p&gt;部署方案采用源码仓库和 GitHub Pages 仓库分离的方式。源码仓库保存完整 Hugo 项目，部署仓库只保存构建后的静态页面。&lt;/p&gt;
+&lt;p&gt;GitHub Actions 的职责是：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;拉取源码&lt;/li&gt;
+&lt;li&gt;配置 Git 行为和 checkout 深度&lt;/li&gt;
+&lt;li&gt;安装 Hugo Extended&lt;/li&gt;
+&lt;li&gt;执行 Hugo 构建&lt;/li&gt;
+&lt;li&gt;将生成的静态文件推送到 Pages 仓库&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;这样本地只需要维护源码，推送后由 GitHub Actions 自动完成构建和发布。&lt;/p&gt;
+&lt;h2 id="维护清单"&gt;维护清单
+&lt;/h2&gt;&lt;p&gt;后续继续改造时，我会优先检查这些点：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;是否影响 Hugo 构建&lt;/li&gt;
+&lt;li&gt;是否影响 PJAX 页面切换&lt;/li&gt;
+&lt;li&gt;是否会重复绑定事件&lt;/li&gt;
+&lt;li&gt;是否阻挡鼠标点击&lt;/li&gt;
+&lt;li&gt;是否影响移动端布局&lt;/li&gt;
+&lt;li&gt;是否让首页看起来像主题默认站点&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;个性化功能可以慢慢加，但每次加完都要回到博客本身：文章是否清晰、导航是否稳定、页面是否好读。这比单纯堆特效更重要。&lt;/p&gt;</description></item></channel></rss>

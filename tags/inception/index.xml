@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Inception on 小翟的个人博客</title><link>https://shiliumi.github.io/tags/inception/</link><description>Recent content in Inception on 小翟的个人博客</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sun, 07 Jun 2026 14:00:56 +0800</lastBuildDate><atom:link href="https://shiliumi.github.io/tags/inception/index.xml" rel="self" type="application/rss+xml"/><item><title>GoogLeNet / Inception：在计算预算里同时看多种尺度</title><link>https://shiliumi.github.io/post/googlenet-inception/</link><pubDate>Sat, 06 Jun 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/googlenet-inception/</guid><description>&lt;img src="https://shiliumi.github.io/post/googlenet-inception/paper-figure.png" alt="Featured image of post GoogLeNet / Inception：在计算预算里同时看多种尺度" /&gt;&lt;p&gt;GoogLeNet 的论文题目叫《Going Deeper with Convolutions》，看起来像是在回应 VGG：既然深度有效，那我们能不能继续往深处走？但 Inception 的答案并不是简单堆更多 &lt;code&gt;3x3&lt;/code&gt;，而是在计算预算有限的情况下，让网络在同一层里同时看不同尺度。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Inception 原论文 Figure 2" class="gallery-image" data-flex-basis="703px" data-flex-grow="293" height="430" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://shiliumi.github.io/post/googlenet-inception/paper-figure.png" srcset="https://shiliumi.github.io/post/googlenet-inception/paper-figure_hu_919a5a82d35fd8a8.png 800w, https://shiliumi.github.io/post/googlenet-inception/paper-figure.png 1260w" width="1260"&gt;&lt;/p&gt;
+&lt;p&gt;图：原论文 Figure 2，对比朴素 Inception 模块和带降维的 Inception 模块。这里直接从论文 PDF 裁取。&lt;/p&gt;
+&lt;h2 id="它关心的不只是更深"&gt;它关心的不只是更深
+&lt;/h2&gt;&lt;p&gt;GoogLeNet 赢得 ILSVRC 2014 分类任务时，参数量反而比很多大网络少。这个事实很关键。论文并不是在说“越深越好，算力随便花”，而是在问：在固定计算资源下，怎样把网络做得更有效？&lt;/p&gt;
+&lt;p&gt;作者受到 Network in Network 和稀疏结构思想影响，希望让网络更宽、更深，同时避免计算爆炸。理想状态下，神经网络可以是稀疏连接的，只在有用的地方建立连接；但当时的硬件更擅长密集矩阵和卷积计算。Inception 的一个隐含折中就是：用密集算子模拟一种结构化的稀疏多分支设计。&lt;/p&gt;
+&lt;p&gt;所以这篇论文读起来很像一次工程折中。它既想让模型同时捕捉多尺度特征，又不能让每个分支都变得昂贵；既想增加表达能力，又必须让训练和推理在实际硬件上可承受。&lt;/p&gt;
+&lt;h2 id="figure-2从朴素版本到可用版本"&gt;Figure 2：从朴素版本到可用版本
+&lt;/h2&gt;&lt;p&gt;原论文 Figure 2 左边是朴素 Inception：同一个输入同时经过 &lt;code&gt;1x1&lt;/code&gt;、&lt;code&gt;3x3&lt;/code&gt;、&lt;code&gt;5x5&lt;/code&gt; 卷积和 &lt;code&gt;3x3&lt;/code&gt; max pooling，然后把输出在通道维拼接。这个设计直观好懂：不同尺度的卷积看到不同范围的局部信息，池化分支保留另一种局部统计，拼接后交给下一层。&lt;/p&gt;
+&lt;p&gt;问题也很明显：如果直接在高通道输入上做 &lt;code&gt;3x3&lt;/code&gt; 和 &lt;code&gt;5x5&lt;/code&gt;，计算量会迅速爆炸。右边的改进版本在昂贵卷积前加了 &lt;code&gt;1x1&lt;/code&gt; 卷积做降维，池化后也接 &lt;code&gt;1x1&lt;/code&gt; 投影。这样做的意义不只是“省参数”。&lt;code&gt;1x1&lt;/code&gt; 卷积先混合通道、压低维度，再让大卷积在更小的通道空间里工作。它既是瓶颈层，也是非线性变换。&lt;/p&gt;
+&lt;p&gt;这一点后来影响非常大。&lt;code&gt;1x1&lt;/code&gt; 卷积从此不再只是一个奇怪小核，而是通道变换、降维、升维、特征重组的核心工具。ResNet 的 bottleneck、MobileNet 的 pointwise convolution，都能看到这个思想的延伸。&lt;/p&gt;
+&lt;h2 id="多尺度不是口号"&gt;多尺度不是口号
+&lt;/h2&gt;&lt;p&gt;Inception 模块里同时放 &lt;code&gt;1x1&lt;/code&gt;、&lt;code&gt;3x3&lt;/code&gt;、&lt;code&gt;5x5&lt;/code&gt;，看上去像“我全都要”。但它背后的问题很实际：视觉目标大小不一，局部纹理、部件结构、上下文范围都可能有用。固定一种卷积核大小，会把尺度选择提前写死。多分支结构让网络在同一层保留几种尺度的响应，再通过通道拼接交给后续层选择。&lt;/p&gt;
+&lt;p&gt;这和手工设计多尺度特征有一点相似，但 Inception 把选择权更多交给学习过程。每个分支的输出通道数是人为设定的预算，分支内部的权重由数据学习。它不是完全自动架构搜索，却比单一路径卷积更灵活。&lt;/p&gt;
+&lt;p&gt;当然，多尺度也有代价。分支越多，工程实现越复杂，调参空间也变大。Inception 后续版本不断改进，很大一部分工作就是在处理这种复杂性：把 &lt;code&gt;5x5&lt;/code&gt; 分解成两个 &lt;code&gt;3x3&lt;/code&gt;，把 &lt;code&gt;nxn&lt;/code&gt; 分解成 &lt;code&gt;1xn + nx1&lt;/code&gt;，引入 BatchNorm，调整辅助分类器的作用。最早这篇论文给出了方向，但不是最终形态。&lt;/p&gt;
+&lt;h2 id="辅助分类器的作用"&gt;辅助分类器的作用
+&lt;/h2&gt;&lt;p&gt;GoogLeNet 很深，论文在中间层接了 auxiliary classifiers。很多介绍会把它们说成“防止梯度消失”，这基本对，但还可以再细一点。中间监督让较浅层也直接接到分类损失，训练信号不用完全从最终输出一路传回来。这在没有残差连接、没有现代归一化配置的时代很有意义。&lt;/p&gt;
+&lt;p&gt;辅助分类器也有正则化作用。它要求中间特征本身就具备一定分类能力，而不是只等最后几层来整理。后来随着 BatchNorm、残差网络和更成熟优化策略出现，辅助分类器的重要性下降了；但在 GoogLeNet 里，它是把 22 层网络训稳的一部分。&lt;/p&gt;
+&lt;p&gt;这也再次说明，论文里的结构要放回训练条件里理解。一个模块后来不再常用，并不代表它当年多余。它可能只是解决了当时那个训练环境下最急的痛点。&lt;/p&gt;
+&lt;h2 id="实验结果怎么看"&gt;实验结果怎么看
+&lt;/h2&gt;&lt;p&gt;GoogLeNet 在 ILSVRC 2014 上取得很强结果，而且参数量远少于 AlexNet 一类模型。这个对比很有说服力：网络性能不是简单由参数量决定，结构化计算同样重要。Inception 通过多分支和 &lt;code&gt;1x1&lt;/code&gt; 降维，把计算花在更有效的位置上。&lt;/p&gt;
+&lt;p&gt;论文还强调 ensemble。最终竞赛结果使用多个模型组合，这在当时顶级比赛里很常见。读论文时要区分单模型能力和集成收益。GoogLeNet 的核心贡献不是“集成赢了比赛”，而是单个 Inception 网络在参数效率和精度上的平衡已经很强。&lt;/p&gt;
+&lt;p&gt;如果把它和 VGG 对照读，会很清楚：VGG 用极简规则证明深度有效，GoogLeNet 则在继续加深时引入多分支和降维，解决计算预算问题。两者都推动 CNN 变深，但路线完全不同。&lt;/p&gt;
+&lt;h2 id="今天再看-inception"&gt;今天再看 Inception
+&lt;/h2&gt;&lt;p&gt;Inception 的原始模块今天看起来有点复杂，很多现代网络更偏向规则堆叠或自动搜索出来的高效模块。但它留下的思想很耐用：同一层可以并行处理多种尺度；&lt;code&gt;1x1&lt;/code&gt; 卷积是通道重组和计算控制的工具；网络设计要把准确率、参数量、计算量放在一起看。&lt;/p&gt;
+&lt;p&gt;复现时我建议不要只画四个分支。更应该亲手算一次计算量：如果输入通道很多，直接做 &lt;code&gt;5x5&lt;/code&gt; 会多贵？加一个 &lt;code&gt;1x1&lt;/code&gt; 降维以后省多少？这个计算一做，Inception 的动机就非常清楚。它不是为了让结构图更热闹，而是在算力预算里争取更多表达路径。&lt;/p&gt;
+&lt;p&gt;GoogLeNet 最有意思的地方，是它把“更深”这个方向变得更精打细算。深度学习并不总是大力出奇迹；很多时候，真正厉害的是知道该在哪儿花计算，在哪儿省计算。&lt;/p&gt;
+&lt;h2 id="参考文献"&gt;参考文献
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;Christian Szegedy et al. &lt;a class="link" href="https://arxiv.org/abs/1409.4842" target="_blank" rel="noopener"
+ &gt;Going Deeper with Convolutions&lt;/a&gt;. CVPR, 2015.&lt;/li&gt;
+&lt;/ul&gt;</description></item></channel></rss>

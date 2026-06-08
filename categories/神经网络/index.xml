@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>神经网络 on 小翟的个人博客</title><link>https://shiliumi.github.io/categories/%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C/</link><description>Recent content in 神经网络 on 小翟的个人博客</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sun, 07 Jun 2026 14:00:56 +0800</lastBuildDate><atom:link href="https://shiliumi.github.io/categories/%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C/index.xml" rel="self" type="application/rss+xml"/><item><title>AlexNet：ImageNet 时代深度卷积网络的起点</title><link>https://shiliumi.github.io/post/alexnet-imagenet-cnn/</link><pubDate>Sat, 06 Jun 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/alexnet-imagenet-cnn/</guid><description>&lt;img src="https://shiliumi.github.io/post/alexnet-imagenet-cnn/paper-figure.png" alt="Featured image of post AlexNet：ImageNet 时代深度卷积网络的起点" /&gt;&lt;p&gt;AlexNet 经常被一句话概括：2012 年在 ImageNet 上把 CNN 带回舞台中央。这个说法没错，但读原文会发现，胜利不是来自某一个神奇模块。它更像一组条件同时成熟：ImageNet 提供足够大的数据，GPU 让大模型训练变得可承受，ReLU 让优化速度上来，数据增强和 dropout 又把过拟合压住。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="AlexNet 原论文 Figure 2" class="gallery-image" data-flex-basis="503px" data-flex-grow="209" height="610" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://shiliumi.github.io/post/alexnet-imagenet-cnn/paper-figure.png" srcset="https://shiliumi.github.io/post/alexnet-imagenet-cnn/paper-figure_hu_f12e11c6f6f1eb45.png 800w, https://shiliumi.github.io/post/alexnet-imagenet-cnn/paper-figure.png 1280w" width="1280"&gt;&lt;/p&gt;
+&lt;p&gt;图：原论文 Figure 2，展示 AlexNet 的双 GPU 划分、卷积层、池化层和全连接层。这里直接从论文 PDF 裁取。&lt;/p&gt;
+&lt;h2 id="先把-2012-年的背景放回来"&gt;先把 2012 年的背景放回来
+&lt;/h2&gt;&lt;p&gt;今天看 AlexNet 的“五个卷积层加三个全连接层”，很容易觉得它并不深。可是放回 2012 年，ImageNet 分类是另一种规模：一百多万训练图像，一千个类别，图片变化极大。传统视觉方法仍然很依赖手工特征，比如 SIFT、HOG、BoVW 之类的管线。CNN 在 MNIST 这类任务上早有成功，但能不能扛住自然图像的大规模分类，还没有被这样强力地证明过。&lt;/p&gt;
+&lt;p&gt;AlexNet 的论文语气很工程。作者并没有试图把每个组件包装成全新理论，而是把一堆当时可用的东西拼成一个能跑赢比赛的系统。这里的“拼”不是贬义。真实突破经常就是这样：算法、数据、硬件、实现细节一起过了某个临界点。&lt;/p&gt;
+&lt;p&gt;论文里的网络被拆到两块 GPU 上训练，Figure 2 上半部分和下半部分分别对应两个 GPU 的职责。某些卷积层只和同一 GPU 上的特征图连接，某些层会跨 GPU 通信。这不是为了提出优雅的并行范式，而是因为当时显存和算力都卡得很紧。读架构图时要记住，模型形状的一部分是被硬件“挤”出来的。&lt;/p&gt;
+&lt;h2 id="figure-2-不是普通网络框图"&gt;Figure 2 不是普通网络框图
+&lt;/h2&gt;&lt;p&gt;Figure 2 里输入是 &lt;code&gt;224x224x3&lt;/code&gt;，第一层使用较大的 &lt;code&gt;11x11&lt;/code&gt; 卷积核和 stride 4，把空间分辨率迅速降下来。后面接 max pooling，再进入第二层、第三层、第四层、第五层卷积。最后是两个 4096 维全连接层和 1000 类 softmax。图里还标出了每层神经元数量，以及哪些层被拆到两个 GPU 上。&lt;/p&gt;
+&lt;p&gt;这张图有两个很强的时代特征。第一，前端卷积核很大，降采样很猛。后来 VGG、ResNet 会更多使用 &lt;code&gt;3x3&lt;/code&gt; 小卷积，但 AlexNet 还保留了早期视觉网络“先用大窗口扫一遍”的味道。第二，全连接层非常重，参数主要堆在后端。今天我们常用 global average pooling 或更轻的分类头，AlexNet 的后端看起来就显得奢侈。&lt;/p&gt;
+&lt;p&gt;不过正是这些“旧”细节，让它适合阅读。它展示了一个过渡时代：CNN 已经从手写数字走向自然图像，但还没有进入后来那种高度规整、批归一化、残差堆叠的阶段。&lt;/p&gt;
+&lt;h2 id="relu-的贡献不能只说成非线性"&gt;ReLU 的贡献不能只说成“非线性”
+&lt;/h2&gt;&lt;p&gt;论文特别强调 ReLU 让训练快很多。这里的快不只是单步计算便宜，更关键是优化过程顺。tanh 和 sigmoid 在饱和区梯度很小，网络深一点后，很多单元会学得很慢。ReLU 在正半轴保留线性梯度，让大网络更容易从随机初始化往有效方向移动。&lt;/p&gt;
+&lt;p&gt;作者做了对比实验，说明使用 ReLU 的网络达到同样训练误差所需的迭代次数少得多。这一点在当时很重要。ImageNet 训练不是玩具实验，如果一个模型理论上能收敛但训练时间过长，它在工程上就等于不可用。ReLU 的价值，正是把“可表达”往“可训练”推了一大步。&lt;/p&gt;
+&lt;p&gt;当然，ReLU 也不是完美组件。负半轴归零会带来死亡单元问题，后来 Leaky ReLU、PReLU、GELU 等激活函数各有改进。但在 AlexNet 这篇论文里，ReLU 的意义非常清楚：让深一点的 CNN 真正训得动。&lt;/p&gt;
+&lt;h2 id="数据增强和-dropout-是大模型的另一半"&gt;数据增强和 dropout 是大模型的另一半
+&lt;/h2&gt;&lt;p&gt;AlexNet 有 6000 万参数，过拟合风险很高。论文没有回避这一点，而是用了两套重要手段。第一是数据增强：从 &lt;code&gt;256x256&lt;/code&gt; 图像里随机裁剪 &lt;code&gt;224x224&lt;/code&gt; patch，水平翻转，并做 PCA 颜色扰动。第二是 dropout，主要用在全连接层，减少神经元之间过强的共适应。&lt;/p&gt;
+&lt;p&gt;这里特别值得注意的是数据增强的实现。作者把裁剪和颜色扰动安排在 CPU 上生成，让 GPU 在训练上一批时，CPU 准备下一批，几乎不额外拖慢训练。这个细节很像系统工程，而不是单纯算法设计。AlexNet 的成功不是“网络结构一画就赢”，而是训练流水线也跟上了。&lt;/p&gt;
+&lt;p&gt;dropout 的使用也很关键。没有 dropout，全连接层很容易记住训练集；加上 dropout 后，模型不能过度依赖某些特定神经元组合。论文里说 dropout 大约让训练时间翻倍，但收益足够明显。今天我们有 BatchNorm、权重衰减、数据增强家族、Mixup、CutMix，dropout 在 CNN 里的地位没当年那么高，但在 AlexNet 的语境里，它就是让大参数模型站住的支柱之一。&lt;/p&gt;
+&lt;h2 id="lrn-是一个有时代痕迹的组件"&gt;LRN 是一个有时代痕迹的组件
+&lt;/h2&gt;&lt;p&gt;论文还使用了 Local Response Normalization。现在复现 AlexNet 时，这个模块常被省掉，因为 BatchNorm 后来几乎替代了它在 CNN 训练中的位置。读原文时，不必把 LRN 当成永恒组件。它更像当时对神经元竞争和响应归一化的一次尝试，帮助模型在没有 BatchNorm 的条件下更稳定。&lt;/p&gt;
+&lt;p&gt;这类组件很有阅读价值，因为它提醒我们不要把模型历史写成一条直线。很多东西曾经有效，后来退场，并不是它们“错了”，而是新的训练方法、硬件条件和网络结构改变了它们的位置。读 AlexNet，要读出哪些思想留下来了，哪些部件只是那个阶段的脚手架。&lt;/p&gt;
+&lt;h2 id="实验表格真正说明了什么"&gt;实验表格真正说明了什么
+&lt;/h2&gt;&lt;p&gt;AlexNet 在 ILSVRC-2012 上的 top-5 error 明显低于传统方法，这是历史节点。但如果只记冠军数字，会把论文读窄。更重要的是，作者通过消融和对比说明：ReLU、数据增强、dropout、模型规模、GPU 训练一起构成了结果。少一个环节，系统就会变弱。&lt;/p&gt;
+&lt;p&gt;论文还报告了在多个 test crops 上平均预测的方式。测试时从图像中取多个裁剪和翻转，把预测平均。这种 test-time augmentation 今天看起来很常见，但它也体现了 AlexNet 的风格：为了把视觉变化纳入模型判断，训练和测试两边都在制造更稳的视角。&lt;/p&gt;
+&lt;p&gt;我读这篇时会把它看成“深度视觉系统论文”，而不是单个架构论文。它告诉我们，大模型要赢，往往需要三件事同时发生：数据规模支撑表达能力，硬件支撑训练成本，正则化支撑泛化。&lt;/p&gt;
+&lt;h2 id="今天复现时该保留什么"&gt;今天复现时该保留什么
+&lt;/h2&gt;&lt;p&gt;如果只是为了在小数据上跑一个 AlexNet 外形，很多细节都可以简化。但如果想复现论文精神，建议至少保留几件事：较大的第一层卷积和快速降采样，ReLU 替代饱和激活函数，强数据增强，dropout 抑制全连接层过拟合，以及对训练硬件条件的意识。&lt;/p&gt;
+&lt;p&gt;双 GPU 切分今天不必照抄。它是当时条件下的工程解，不是架构美学。LRN 也可以作为历史组件理解，而不必强行保留。真正应该带走的是 AlexNet 的组合判断：CNN 并不是因为某个单点技巧突然赢了 ImageNet，而是因为整个训练系统终于足够强。&lt;/p&gt;
+&lt;p&gt;这也是 AlexNet 读起来很有劲的地方。它不像后来一些论文那样有一个极简公式或优雅定理，但它把一批看似普通的工程选择组织成了一个改变视觉研究方向的结果。很多时候，历史拐点就是这样出现的：不是单个按钮，而是一整排开关同时拨到了正确位置。&lt;/p&gt;
+&lt;h2 id="参考文献"&gt;参考文献
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;Alex Krizhevsky, Ilya Sutskever, Geoffrey E. Hinton. &lt;a class="link" href="https://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks" target="_blank" rel="noopener"
+ &gt;ImageNet Classification with Deep Convolutional Neural Networks&lt;/a&gt;. NeurIPS, 2012.&lt;/li&gt;
+&lt;/ul&gt;</description></item><item><title>BERT：双向预训练如何改变 NLP 的使用方式</title><link>https://shiliumi.github.io/post/bert-bidirectional-transformers/</link><pubDate>Sat, 06 Jun 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/bert-bidirectional-transformers/</guid><description>&lt;img src="https://shiliumi.github.io/post/bert-bidirectional-transformers/paper-figure.png" alt="Featured image of post BERT：双向预训练如何改变 NLP 的使用方式" /&gt;&lt;p&gt;BERT 的影响很大，不只是因为它在 GLUE、SQuAD 等榜单上刷新结果，更因为它改变了 NLP 模型的使用方式。以前很多任务会各自设计结构；BERT 把一个大规模预训练 Transformer encoder 拿出来，然后通过很小的任务头微调，成了后来预训练-微调范式的标准模板。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="BERT 原论文 Figure 1" class="gallery-image" data-flex-basis="423px" data-flex-grow="176" height="850" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://shiliumi.github.io/post/bert-bidirectional-transformers/paper-figure.png" srcset="https://shiliumi.github.io/post/bert-bidirectional-transformers/paper-figure_hu_65dce6b6e0d90b84.png 800w, https://shiliumi.github.io/post/bert-bidirectional-transformers/paper-figure.png 1500w" width="1500"&gt;&lt;/p&gt;
+&lt;p&gt;图：原论文 Figure 1，展示 BERT 的预训练和微调流程。这里直接从论文 PDF 裁取。&lt;/p&gt;
+&lt;h2 id="bert-的问题意识"&gt;BERT 的问题意识
+&lt;/h2&gt;&lt;p&gt;BERT 之前，ELMo 已经用语言模型预训练提供上下文表示，GPT 也展示了 Transformer decoder 预训练再微调的力量。但 GPT 是从左到右的语言模型，每个 token 只能看左侧上下文。很多理解任务需要双向上下文，比如判断一个词在句子里的含义、抽取问答 span、做自然语言推理。BERT 的核心问题就是：能不能预训练一个真正双向的深层表示？&lt;/p&gt;
+&lt;p&gt;直接用普通语言模型不行，因为如果每个位置都能看到自己，预测任务会泄漏答案。BERT 的办法是 Masked Language Model：随机遮住一部分 token，让模型根据左右上下文预测它们。这样 encoder 可以双向看上下文，又不会直接看到被预测词。&lt;/p&gt;
+&lt;p&gt;这个思路很朴素，但威力很大。它把 Transformer encoder 从一个任务结构，变成了通用文本表示学习器。&lt;/p&gt;
+&lt;h2 id="figure-1预训练和微调的同构"&gt;Figure 1：预训练和微调的同构
+&lt;/h2&gt;&lt;p&gt;原论文 Figure 1 左边是 pre-training，右边是 fine-tuning。两边都使用同一个 BERT 主体，区别主要在输入、输出头和损失。预训练时，模型处理未标注句子对，做 MLM 和 NSP；微调时，在同一个编码器上接一个很薄的任务层，比如分类、序列标注或问答起止位置预测。&lt;/p&gt;
+&lt;p&gt;这张图真正重要的是“结构尽量不变”。以前很多 NLP 任务需要定制模型：句子分类一个结构，问答一个结构，序列标注另一个结构。BERT 把它们统一成“把任务格式塞进同一个输入表示，再微调整个模型”。这极大降低了迁移成本。&lt;/p&gt;
+&lt;p&gt;图里还有 &lt;code&gt;[CLS]&lt;/code&gt; 和 &lt;code&gt;[SEP]&lt;/code&gt;。&lt;code&gt;[CLS]&lt;/code&gt; 放在序列开头，最终表示常用于句子级分类；&lt;code&gt;[SEP]&lt;/code&gt; 分隔句子 A 和句子 B。BERT 的输入表示由 token embedding、segment embedding 和 position embedding 相加得到。这个输入格式后来几乎成了 encoder 类 NLP 模型的基本语言。&lt;/p&gt;
+&lt;h2 id="mlm-的细节很关键"&gt;MLM 的细节很关键
+&lt;/h2&gt;&lt;p&gt;BERT 随机选择 15% token 作为预测目标，但并不是全部替换成 &lt;code&gt;[MASK]&lt;/code&gt;。其中 80% 替换为 &lt;code&gt;[MASK]&lt;/code&gt;，10% 替换为随机词，10% 保持原词不变。这个设计是为了解决预训练和微调之间的不一致：微调时真实输入里没有 &lt;code&gt;[MASK]&lt;/code&gt;，如果预训练只见 &lt;code&gt;[MASK]&lt;/code&gt;，会有分布差异。&lt;/p&gt;
+&lt;p&gt;这个细节很能体现论文的工程判断。MLM 不是随便遮词，它要同时满足三个目标：制造可监督信号，允许双向上下文，减少 &lt;code&gt;[MASK]&lt;/code&gt; 带来的预训练-微调差距。&lt;/p&gt;
+&lt;p&gt;MLM 也有代价。每个 batch 里只有 15% token 贡献预测损失，预训练效率不如自回归语言模型直接预测每个 token。后来很多模型围绕这个问题继续改，比如 RoBERTa 调整预训练策略，ELECTRA 用 replaced token detection 提高样本效率。BERT 是范式起点，不是终点。&lt;/p&gt;
+&lt;h2 id="nsp-的角色和争议"&gt;NSP 的角色和争议
+&lt;/h2&gt;&lt;p&gt;BERT 的第二个预训练任务是 Next Sentence Prediction。模型看到句子 A 和句子 B，要判断 B 是否真实接在 A 后面。作者希望这个任务帮助句子对关系建模，比如自然语言推理和问答。&lt;/p&gt;
+&lt;p&gt;后来研究对 NSP 的必要性提出了质疑。RoBERTa 去掉 NSP 后效果仍然很好，甚至更强。这并不削弱 BERT 原论文的价值，反而说明预训练范式还在快速摸索。读 BERT 时，可以把 NSP 看成当时为了句子级任务加入的一个尝试，而不是永恒标准。&lt;/p&gt;
+&lt;p&gt;更重要的是，BERT 把“预训练目标设计”变成了 NLP 研究的核心问题之一。模型结构之外，怎么构造自监督任务、怎么采样数据、怎么处理输入格式，都开始直接影响下游表现。&lt;/p&gt;
+&lt;h2 id="模型尺寸和微调"&gt;模型尺寸和微调
+&lt;/h2&gt;&lt;p&gt;论文主要报告 BERT_BASE 和 BERT_LARGE。BERT_BASE 有 12 层、768 hidden size、12 个 attention heads，大约 110M 参数；BERT_LARGE 有 24 层、1024 hidden size、16 heads，大约 340M 参数。这个规模在当时已经很大，但和后来的大语言模型相比还算克制。&lt;/p&gt;
+&lt;p&gt;微调时，BERT 通常不冻结主干，而是让所有参数一起更新。对句子分类任务，用 &lt;code&gt;[CLS]&lt;/code&gt; 表示接分类层；对 SQuAD 这类抽取式问答，预测每个 token 作为 start/end 的概率；对序列标注，每个 token 输出标签。统一主干，不同任务头，这就是 BERT 最实用的地方。&lt;/p&gt;
+&lt;p&gt;不过微调并不总是稳定。学习率、batch size、训练轮数、随机种子都会影响结果。小数据任务上，过拟合和灾难性遗忘也可能出现。BERT 论文展示了范式，但实际使用还需要很多调参经验。&lt;/p&gt;
+&lt;h2 id="实验结果背后的转向"&gt;实验结果背后的转向
+&lt;/h2&gt;&lt;p&gt;BERT 在 GLUE、MultiNLI、SQuAD 等任务上的结果非常亮眼。单看榜单可以说它强，但更深的变化是：NLP 模型的工作重心从“为每个任务设计结构”转向“预训练一个强通用表示，再用任务数据轻量适配”。这让下游任务开发方式发生了变化。&lt;/p&gt;
+&lt;p&gt;这种变化后来延伸出 RoBERTa、ALBERT、DistilBERT、ELECTRA、DeBERTa 等大量模型。它们有的改预训练数据，有的改目标函数，有的压缩参数，有的改注意力偏置。但它们都绕不开 BERT 开出的路：大规模未标注文本里有大量可迁移知识，Transformer encoder 可以把这些知识压进参数。&lt;/p&gt;
+&lt;p&gt;今天大语言模型更常使用 decoder-only 架构，但 BERT 在理解任务、检索、分类、信息抽取、嵌入模型里仍然非常重要。它不是被替代掉的旧模型，而是预训练表示学习的一个基础坐标。&lt;/p&gt;
+&lt;h2 id="读-bert-时该盯住什么"&gt;读 BERT 时该盯住什么
+&lt;/h2&gt;&lt;p&gt;我会把 BERT 分成三层读。第一层是结构：多层 Transformer encoder，双向 self-attention。第二层是输入格式：&lt;code&gt;[CLS]&lt;/code&gt;、&lt;code&gt;[SEP]&lt;/code&gt;、segment embedding、position embedding。第三层是训练范式：MLM/NSP 预训练，再全参数微调到下游任务。&lt;/p&gt;
+&lt;p&gt;如果只看结构，会觉得 BERT 只是 Transformer encoder；如果只看榜单，会觉得它只是更大模型。真正的关键在第三层：它让大量 NLP 任务共享同一套预训练表示。这个范式上的转向，才是 BERT 最长久的影响。&lt;/p&gt;
+&lt;h2 id="参考文献"&gt;参考文献
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;Jacob Devlin, Ming-Wei Chang, Kenton Lee, Kristina Toutanova. &lt;a class="link" href="https://arxiv.org/abs/1810.04805" target="_blank" rel="noopener"
+ &gt;BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding&lt;/a&gt;. NAACL, 2019.&lt;/li&gt;
+&lt;/ul&gt;</description></item><item><title>GoogLeNet / Inception：在计算预算里同时看多种尺度</title><link>https://shiliumi.github.io/post/googlenet-inception/</link><pubDate>Sat, 06 Jun 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/googlenet-inception/</guid><description>&lt;img src="https://shiliumi.github.io/post/googlenet-inception/paper-figure.png" alt="Featured image of post GoogLeNet / Inception：在计算预算里同时看多种尺度" /&gt;&lt;p&gt;GoogLeNet 的论文题目叫《Going Deeper with Convolutions》，看起来像是在回应 VGG：既然深度有效，那我们能不能继续往深处走？但 Inception 的答案并不是简单堆更多 &lt;code&gt;3x3&lt;/code&gt;，而是在计算预算有限的情况下，让网络在同一层里同时看不同尺度。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Inception 原论文 Figure 2" class="gallery-image" data-flex-basis="703px" data-flex-grow="293" height="430" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://shiliumi.github.io/post/googlenet-inception/paper-figure.png" srcset="https://shiliumi.github.io/post/googlenet-inception/paper-figure_hu_919a5a82d35fd8a8.png 800w, https://shiliumi.github.io/post/googlenet-inception/paper-figure.png 1260w" width="1260"&gt;&lt;/p&gt;
+&lt;p&gt;图：原论文 Figure 2，对比朴素 Inception 模块和带降维的 Inception 模块。这里直接从论文 PDF 裁取。&lt;/p&gt;
+&lt;h2 id="它关心的不只是更深"&gt;它关心的不只是更深
+&lt;/h2&gt;&lt;p&gt;GoogLeNet 赢得 ILSVRC 2014 分类任务时，参数量反而比很多大网络少。这个事实很关键。论文并不是在说“越深越好，算力随便花”，而是在问：在固定计算资源下，怎样把网络做得更有效？&lt;/p&gt;
+&lt;p&gt;作者受到 Network in Network 和稀疏结构思想影响，希望让网络更宽、更深，同时避免计算爆炸。理想状态下，神经网络可以是稀疏连接的，只在有用的地方建立连接；但当时的硬件更擅长密集矩阵和卷积计算。Inception 的一个隐含折中就是：用密集算子模拟一种结构化的稀疏多分支设计。&lt;/p&gt;
+&lt;p&gt;所以这篇论文读起来很像一次工程折中。它既想让模型同时捕捉多尺度特征，又不能让每个分支都变得昂贵；既想增加表达能力，又必须让训练和推理在实际硬件上可承受。&lt;/p&gt;
+&lt;h2 id="figure-2从朴素版本到可用版本"&gt;Figure 2：从朴素版本到可用版本
+&lt;/h2&gt;&lt;p&gt;原论文 Figure 2 左边是朴素 Inception：同一个输入同时经过 &lt;code&gt;1x1&lt;/code&gt;、&lt;code&gt;3x3&lt;/code&gt;、&lt;code&gt;5x5&lt;/code&gt; 卷积和 &lt;code&gt;3x3&lt;/code&gt; max pooling，然后把输出在通道维拼接。这个设计直观好懂：不同尺度的卷积看到不同范围的局部信息，池化分支保留另一种局部统计，拼接后交给下一层。&lt;/p&gt;
+&lt;p&gt;问题也很明显：如果直接在高通道输入上做 &lt;code&gt;3x3&lt;/code&gt; 和 &lt;code&gt;5x5&lt;/code&gt;，计算量会迅速爆炸。右边的改进版本在昂贵卷积前加了 &lt;code&gt;1x1&lt;/code&gt; 卷积做降维，池化后也接 &lt;code&gt;1x1&lt;/code&gt; 投影。这样做的意义不只是“省参数”。&lt;code&gt;1x1&lt;/code&gt; 卷积先混合通道、压低维度，再让大卷积在更小的通道空间里工作。它既是瓶颈层，也是非线性变换。&lt;/p&gt;
+&lt;p&gt;这一点后来影响非常大。&lt;code&gt;1x1&lt;/code&gt; 卷积从此不再只是一个奇怪小核，而是通道变换、降维、升维、特征重组的核心工具。ResNet 的 bottleneck、MobileNet 的 pointwise convolution，都能看到这个思想的延伸。&lt;/p&gt;
+&lt;h2 id="多尺度不是口号"&gt;多尺度不是口号
+&lt;/h2&gt;&lt;p&gt;Inception 模块里同时放 &lt;code&gt;1x1&lt;/code&gt;、&lt;code&gt;3x3&lt;/code&gt;、&lt;code&gt;5x5&lt;/code&gt;，看上去像“我全都要”。但它背后的问题很实际：视觉目标大小不一，局部纹理、部件结构、上下文范围都可能有用。固定一种卷积核大小，会把尺度选择提前写死。多分支结构让网络在同一层保留几种尺度的响应，再通过通道拼接交给后续层选择。&lt;/p&gt;
+&lt;p&gt;这和手工设计多尺度特征有一点相似，但 Inception 把选择权更多交给学习过程。每个分支的输出通道数是人为设定的预算，分支内部的权重由数据学习。它不是完全自动架构搜索，却比单一路径卷积更灵活。&lt;/p&gt;
+&lt;p&gt;当然，多尺度也有代价。分支越多，工程实现越复杂，调参空间也变大。Inception 后续版本不断改进，很大一部分工作就是在处理这种复杂性：把 &lt;code&gt;5x5&lt;/code&gt; 分解成两个 &lt;code&gt;3x3&lt;/code&gt;，把 &lt;code&gt;nxn&lt;/code&gt; 分解成 &lt;code&gt;1xn + nx1&lt;/code&gt;，引入 BatchNorm，调整辅助分类器的作用。最早这篇论文给出了方向，但不是最终形态。&lt;/p&gt;
+&lt;h2 id="辅助分类器的作用"&gt;辅助分类器的作用
+&lt;/h2&gt;&lt;p&gt;GoogLeNet 很深，论文在中间层接了 auxiliary classifiers。很多介绍会把它们说成“防止梯度消失”，这基本对，但还可以再细一点。中间监督让较浅层也直接接到分类损失，训练信号不用完全从最终输出一路传回来。这在没有残差连接、没有现代归一化配置的时代很有意义。&lt;/p&gt;
+&lt;p&gt;辅助分类器也有正则化作用。它要求中间特征本身就具备一定分类能力，而不是只等最后几层来整理。后来随着 BatchNorm、残差网络和更成熟优化策略出现，辅助分类器的重要性下降了；但在 GoogLeNet 里，它是把 22 层网络训稳的一部分。&lt;/p&gt;
+&lt;p&gt;这也再次说明，论文里的结构要放回训练条件里理解。一个模块后来不再常用，并不代表它当年多余。它可能只是解决了当时那个训练环境下最急的痛点。&lt;/p&gt;
+&lt;h2 id="实验结果怎么看"&gt;实验结果怎么看
+&lt;/h2&gt;&lt;p&gt;GoogLeNet 在 ILSVRC 2014 上取得很强结果，而且参数量远少于 AlexNet 一类模型。这个对比很有说服力：网络性能不是简单由参数量决定，结构化计算同样重要。Inception 通过多分支和 &lt;code&gt;1x1&lt;/code&gt; 降维，把计算花在更有效的位置上。&lt;/p&gt;
+&lt;p&gt;论文还强调 ensemble。最终竞赛结果使用多个模型组合，这在当时顶级比赛里很常见。读论文时要区分单模型能力和集成收益。GoogLeNet 的核心贡献不是“集成赢了比赛”，而是单个 Inception 网络在参数效率和精度上的平衡已经很强。&lt;/p&gt;
+&lt;p&gt;如果把它和 VGG 对照读，会很清楚：VGG 用极简规则证明深度有效，GoogLeNet 则在继续加深时引入多分支和降维，解决计算预算问题。两者都推动 CNN 变深，但路线完全不同。&lt;/p&gt;
+&lt;h2 id="今天再看-inception"&gt;今天再看 Inception
+&lt;/h2&gt;&lt;p&gt;Inception 的原始模块今天看起来有点复杂，很多现代网络更偏向规则堆叠或自动搜索出来的高效模块。但它留下的思想很耐用：同一层可以并行处理多种尺度；&lt;code&gt;1x1&lt;/code&gt; 卷积是通道重组和计算控制的工具；网络设计要把准确率、参数量、计算量放在一起看。&lt;/p&gt;
+&lt;p&gt;复现时我建议不要只画四个分支。更应该亲手算一次计算量：如果输入通道很多，直接做 &lt;code&gt;5x5&lt;/code&gt; 会多贵？加一个 &lt;code&gt;1x1&lt;/code&gt; 降维以后省多少？这个计算一做，Inception 的动机就非常清楚。它不是为了让结构图更热闹，而是在算力预算里争取更多表达路径。&lt;/p&gt;
+&lt;p&gt;GoogLeNet 最有意思的地方，是它把“更深”这个方向变得更精打细算。深度学习并不总是大力出奇迹；很多时候，真正厉害的是知道该在哪儿花计算，在哪儿省计算。&lt;/p&gt;
+&lt;h2 id="参考文献"&gt;参考文献
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;Christian Szegedy et al. &lt;a class="link" href="https://arxiv.org/abs/1409.4842" target="_blank" rel="noopener"
+ &gt;Going Deeper with Convolutions&lt;/a&gt;. CVPR, 2015.&lt;/li&gt;
+&lt;/ul&gt;</description></item><item><title>LeNet-5：卷积网络最早成熟的工程样子</title><link>https://shiliumi.github.io/post/lenet5-gradient-based-document-recognition/</link><pubDate>Sat, 06 Jun 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/lenet5-gradient-based-document-recognition/</guid><description>&lt;img src="https://shiliumi.github.io/post/lenet5-gradient-based-document-recognition/paper-figure.png" alt="Featured image of post LeNet-5：卷积网络最早成熟的工程样子" /&gt;&lt;p&gt;今天回头读 LeNet-5，最容易误判的一点，是把它当成“一个很小的 CNN”。这样说当然也对，但太薄了。LeCun、Bottou、Bengio 和 Haffner 写的《Gradient-Based Learning Applied to Document Recognition》不是在展示一个课堂网络，而是在回答一个当时很实际的问题：能不能让一个可训练系统直接面对文档图像，从像素开始，把特征、分类、甚至后面的识别流程尽量接在一起。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="LeNet-5 原论文 Figure 2" class="gallery-image" data-flex-basis="619px" data-flex-grow="258" height="620" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://shiliumi.github.io/post/lenet5-gradient-based-document-recognition/paper-figure.png" srcset="https://shiliumi.github.io/post/lenet5-gradient-based-document-recognition/paper-figure_hu_fe4d78925e18458.png 800w, https://shiliumi.github.io/post/lenet5-gradient-based-document-recognition/paper-figure.png 1600w" width="1600"&gt;&lt;/p&gt;
+&lt;p&gt;图：原论文 Figure 2，展示 LeNet-5 从 &lt;code&gt;32x32&lt;/code&gt; 输入到 10 类输出的结构。这里直接从论文 PDF 裁取。&lt;/p&gt;
+&lt;h2 id="先看论文关心的任务"&gt;先看论文关心的任务
+&lt;/h2&gt;&lt;p&gt;这篇论文的标题里有 “Document Recognition”，不只是 “Digit Classification”。如果只拿 MNIST 准确率去理解它，会错过一半以上的背景。作者真正关心的是支票、邮政编码、手写字符这样的文档识别链路。真实文档里，字符并不总是已经被完美切出来；系统要处理候选切分、字符分类、路径搜索和全局打分。LeNet-5 是其中的核心分类器，但论文的野心比分类器更大。&lt;/p&gt;
+&lt;p&gt;在当时，主流思路通常会先做手工特征：笔画、轮廓、投影、几何形状，再把特征交给分类器。LeCun 等人的选择更激进一些：既然特征决定上限，那就把特征提取也交给学习系统。这个想法今天听起来平常，可在样本量、算力和优化工具都有限的年代，它需要很强的结构先验来兜底。&lt;/p&gt;
+&lt;p&gt;卷积网络的先验正好落在字符图像上。笔画是局部的，笔画检测器不应该只在某一个坐标有效；轻微平移不该改变类别；越往后越应该组合出更抽象的局部形状。LeNet-5 不是“没有人工先验”，而是把先验写进网络形状：局部连接、权值共享、下采样、逐层扩大感受野。&lt;/p&gt;
+&lt;h2 id="figure-2-应该怎么读"&gt;Figure 2 应该怎么读
+&lt;/h2&gt;&lt;p&gt;原论文 Figure 2 很值得停下来多看一会儿。输入是 &lt;code&gt;32x32&lt;/code&gt;，这比居中的数字本身更大，因为作者希望最高层特征的感受野中心能覆盖原始字符的关键区域。C1 是 6 个 &lt;code&gt;28x28&lt;/code&gt; 特征图，每个单元看输入上的 &lt;code&gt;5x5&lt;/code&gt; 邻域。S2 把它降到 &lt;code&gt;14x14&lt;/code&gt;，但不是今天常见的固定 max pooling，而是每个下采样单元会把局部输入求和，再乘一个可训练系数、加一个可训练偏置，然后过非线性。&lt;/p&gt;
+&lt;p&gt;C3 是这张图里经常被简化掉的地方。它不是完全连接到 S2 的所有特征图，而是采用部分连接。论文这么做有几个目的：减少参数，打破对称，让不同特征图学习不同组合。今天我们有更强的硬件和更成熟的初始化，不太会手动写这种连接表，但它说明早期网络设计非常在意“哪些自由度值得花参数”。&lt;/p&gt;
+&lt;p&gt;到了 C5，图上写的是 &lt;code&gt;120&lt;/code&gt; 个特征图，不过因为前一层空间尺寸已经很小，C5 实际上很接近全连接层。后面 F6 是 84 个单元，再接 10 类输出。整套网络只有大约 6 万可训练参数，却有大量连接，这个对比是卷积权值共享的直接结果：连接多不等于参数多，同一组权重可以在空间上反复使用。&lt;/p&gt;
+&lt;h2 id="下采样的意义不是压缩图片"&gt;下采样的意义不是压缩图片
+&lt;/h2&gt;&lt;p&gt;如果把 S2、S4 理解成“把图变小”，那就太像图像处理了。论文里下采样更重要的意义，是用很小的空间损失换一点局部不变性。手写数字里的笔画位置有轻微偏移很正常，一个系统如果对每个像素位置都过分敏感，就会把不重要的形变当成类别差异。&lt;/p&gt;
+&lt;p&gt;但 LeNet 的下采样也不是今天的标准池化。它有可训练系数和偏置，说明作者还没有把池化完全固定成一个无参数模块，而是在“保留强响应”和“学习响应尺度”之间找折中。后来 max pooling、average pooling、strided convolution 各自流行过，很多实现也会把 LeNet 简化成普通平均池化或最大池化。复现时可以简化，但读论文时最好知道原始设计并不是那么粗糙。&lt;/p&gt;
+&lt;p&gt;这个细节还提醒我：深度学习里的许多组件不是一开始就以今天的形态出现的。它们往往先以一个带工程味的版本出现，解决一个真实痛点，后来才被更简单、更稳定、更适合硬件的形式替代。&lt;/p&gt;
+&lt;h2 id="端到端不等于没有系统工程"&gt;端到端不等于没有系统工程
+&lt;/h2&gt;&lt;p&gt;这篇论文后半部分讨论 Graph Transformer Networks，用来把字符识别嵌入更大的图结构。这个部分常被只讲 CNN 历史的文章略过，但它其实很能说明作者的思路。LeNet-5 不是孤零零输出一个数字，然后论文就结束了。它被放进一个文档识别系统里，与切分候选、路径搜索、上下文约束一起工作。&lt;/p&gt;
+&lt;p&gt;这和现在很多模型论文的气质不太一样。现在我们习惯把 benchmark 表格当终点；这篇论文更像在说：分类器要能进入业务系统，经受系统级约束。手写支票识别不是把单个数字识别对就完事，前后字符、候选路径、拒识策略都会影响最终结果。LeNet-5 的价值，正是在一个完整场景里被验证出来。&lt;/p&gt;
+&lt;p&gt;所以读这篇时，我不太愿意只说“它提出了卷积网络”。更准确的说法是：它把可训练局部特征提取器放进文档识别工程，并证明这种方式可以替代相当多的手工特征工作。&lt;/p&gt;
+&lt;h2 id="实验数字背后看什么"&gt;实验数字背后看什么
+&lt;/h2&gt;&lt;p&gt;LeNet-5 的准确率今天已经不是惊人的数字，但实验设计仍然有意思。作者比较了多种分类器和训练方式，包括 k-NN、SVM、全连接网络、卷积网络等。真正值得看的不是“谁在某个表格上高一点”，而是卷积结构为什么能在参数受控的同时取得强性能。&lt;/p&gt;
+&lt;p&gt;全连接网络可以有很多参数，但它对位置变化不够友好；手工特征方法可以注入经验，但特征一旦设计错，后面的分类器很难补救；卷积网络介于两者之间，它把“局部性”和“平移共享”作为结构限制，同时允许特征自己学出来。这种限制不是削弱模型，反而让模型少学很多无意义的自由度。&lt;/p&gt;
+&lt;p&gt;论文还强调训练数据预处理和输入规范化。比如输入图像被放进 &lt;code&gt;32x32&lt;/code&gt;，灰度值被规范到特定范围，字符居中但保留边界。这些细节看起来普通，却决定了早期网络能不能稳定工作。今天我们有 BatchNorm、Adam、更大的数据和自动增强，容易低估这些朴素处理的分量。&lt;/p&gt;
+&lt;h2 id="今天复现时别只搭壳"&gt;今天复现时别只搭壳
+&lt;/h2&gt;&lt;p&gt;很多教程里的 LeNet 是两个卷积层加三个全连接层，能跑 MNIST，也够教学。但如果想复现论文思想，至少要额外盯住几件事。第一，输入为什么是 &lt;code&gt;32x32&lt;/code&gt; 而不是刚好包住数字。第二，下采样层在原文中有可训练参数。第三，C3 的部分连接为什么存在。第四，论文并不只关心单字符分类，还关心分类器如何进入文档系统。&lt;/p&gt;
+&lt;p&gt;我会把这些分成两类：今天仍然值得继承的思想，和当年受硬件、样本、实现条件影响的细节。前者包括局部连接、权值共享、下采样获得局部不变性、端到端学习；后者包括具体连接表、特定输出层形式、Graph Transformer Network 的实现方式。分开以后，既不会因为 LeNet 古早就低估它，也不会把 1998 年的每个实现选择都当成今天必须照抄的标准。&lt;/p&gt;
+&lt;p&gt;LeNet-5 最耐看的地方，是它并不靠“大”取胜。它靠的是把问题结构吃透，然后把参数放在最该放的位置。后来的 CNN 越来越深、越来越宽，但这个基本判断没有变：好的网络结构，不只是堆算力，而是在任务里找到可共享、可组合、可泛化的那部分规律。&lt;/p&gt;
+&lt;h2 id="参考文献"&gt;参考文献
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;Yann LeCun, Léon Bottou, Yoshua Bengio, Patrick Haffner. &lt;a class="link" href="https://yann.lecun.com/exdb/publis/pdf/lecun-98.pdf" target="_blank" rel="noopener"
+ &gt;Gradient-Based Learning Applied to Document Recognition&lt;/a&gt;. Proceedings of the IEEE, 1998.&lt;/li&gt;
+&lt;/ul&gt;</description></item><item><title>LSTM：给循环网络一条不容易断的误差信道</title><link>https://shiliumi.github.io/post/lstm-long-short-term-memory/</link><pubDate>Sat, 06 Jun 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/lstm-long-short-term-memory/</guid><description>&lt;img src="https://shiliumi.github.io/post/lstm-long-short-term-memory/paper-figure.png" alt="Featured image of post LSTM：给循环网络一条不容易断的误差信道" /&gt;&lt;p&gt;LSTM 这篇论文读起来不像后来的模型论文。它没有从一个漂亮模块开始讲，而是先咬住一个训练问题：普通循环网络理论上可以表达长时间依赖，真正训练时却经常学不到。Hochreiter 和 Schmidhuber 的答案也不是“把网络做大”，而是给误差信号设计一条更稳定的通路。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="LSTM 原论文 Figure 1" class="gallery-image" data-flex-basis="440px" data-flex-grow="183" height="610" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://shiliumi.github.io/post/lstm-long-short-term-memory/paper-figure.png" srcset="https://shiliumi.github.io/post/lstm-long-short-term-memory/paper-figure_hu_e3d7732c63bf9b2f.png 800w, https://shiliumi.github.io/post/lstm-long-short-term-memory/paper-figure.png 1120w" width="1120"&gt;&lt;/p&gt;
+&lt;p&gt;图：原论文 Figure 1，展示 memory cell、输入门、输出门以及自循环连接。这里直接从论文 PDF 裁取。&lt;/p&gt;
+&lt;h2 id="先别急着背三个门"&gt;先别急着背三个门
+&lt;/h2&gt;&lt;p&gt;很多教程讲 LSTM，会从输入门、遗忘门、输出门开始。这对写代码方便，但不太像原论文的逻辑。原论文先讨论的是梯度在时间上怎么传播。普通 RNN 每走一个时间步，误差都要乘上循环权重和激活函数导数。时间间隔短时问题还不明显；一旦监督信号和触发事件隔得很远，梯度就可能一路变小到几乎没有，也可能在某些权重条件下爆炸。&lt;/p&gt;
+&lt;p&gt;这个问题并不是“模型不够聪明”，而是路径本身太难走。你可以想象一个需要在第 100 步才输出答案的序列任务：第 1 步的线索确实重要，但它的责任信号要穿过 99 次递归变换才能回来。每一步都稍微缩一下，最后就什么也剩不下。&lt;/p&gt;
+&lt;p&gt;LSTM 的核心是 constant error carousel，常被简称为 CEC。它的意思不是让误差永远不变，而是在 memory cell 内部建立一条权重为 1 的自循环，使误差信号在理想情况下可以沿状态通道跨时间传递。门控单元负责决定外部信息什么时候进入、内部信息什么时候暴露给外部。重点是：先有稳定误差流的目标，再有门的结构。&lt;/p&gt;
+&lt;h2 id="figure-1-里真正关键的线"&gt;Figure 1 里真正关键的线
+&lt;/h2&gt;&lt;p&gt;原论文 Figure 1 比现代教程图更有“电路图”味道。中间的盒子是 memory cell，盒子里的自循环标了 &lt;code&gt;1.0&lt;/code&gt;，这就是常数误差流的物理位置。左边是输入到 cell 的连接，下面有输入门 &lt;code&gt;in_j&lt;/code&gt;，右下有输出门 &lt;code&gt;out_j&lt;/code&gt;。输入门控制写入，输出门控制读出。图里没有今天标准 LSTM 里的遗忘门，这是后来 Gers 等人在 2000 年左右加入并广泛使用的扩展。&lt;/p&gt;
+&lt;p&gt;这张图要顺着状态走，而不是顺着计算公式走。外部输入先经过某个非线性变换，只有输入门打开时才写进 cell state；cell state 通过自循环跨时间保留；输出门打开时，内部状态经过输出非线性影响外部网络。这样一来，保存信息和使用信息被拆开了。普通 RNN 的隐藏状态既要记忆又要输出，压力很大；LSTM 把“记在内部”和“给外部看”分成了两个动作。&lt;/p&gt;
+&lt;p&gt;如果只把门理解成三个 sigmoid，就会漏掉这个结构动机。门不是装饰，也不只是让网络更复杂。它们是在保护那条线性的状态通道：该写的时候写，该读的时候读，该隔离外界噪声的时候关上。&lt;/p&gt;
+&lt;h2 id="为什么长依赖突然可学了"&gt;为什么长依赖突然可学了
+&lt;/h2&gt;&lt;p&gt;普通 RNN 的远距离依赖难学，是因为信息和梯度都要反复经过同一类非线性更新。LSTM 让一部分信息停留在更接近线性的状态里。这样，梯度反传时不必每一步都被激活函数导数压一次。结构上留了路，优化器才有机会找到解。&lt;/p&gt;
+&lt;p&gt;论文的实验不少是人工构造任务，例如在长噪声序列中记住早期触发符号，隔很多步后再输出结果。今天看这些任务可能觉得“不够真实”，但它们恰好对准作者要证明的能力：模型能不能跨越很长时间间隔学习因果关系。对于 1997 年的语境，这比在某个自然语言数据集上刷一点指标更有说服力。&lt;/p&gt;
+&lt;p&gt;还有一个容易忽略的点：LSTM 并没有保证所有长依赖都自动解决。门也要学，状态也可能被错误写入，优化仍然可能失败。它提供的是一条可训练路径，不是消除训练难度的魔法。这个判断放到今天也适用。任何结构改进，如果没有改变梯度和信息的路径，只是把模块名字换得更响，通常不会真正解决深层或长程问题。&lt;/p&gt;
+&lt;h2 id="原始-lstm-和现代-lstm-不完全一样"&gt;原始 LSTM 和现代 LSTM 不完全一样
+&lt;/h2&gt;&lt;p&gt;现代实现里常见的 LSTM 有输入门、遗忘门、输出门，还有候选状态，通常写成一组矩阵乘法。原始论文里最核心的是输入门、输出门和 CEC，自循环权重固定为 1，用门来保护记忆。遗忘门后来变得非常重要，因为真实任务里的序列并不总是只需要“永远记住”，很多信息要主动清理。&lt;/p&gt;
+&lt;p&gt;这也解释了一个读论文时常见的困惑：为什么我熟悉的 LSTM 公式和原文图不一样。没必要硬把所有符号逐项对应。更好的读法是沿着演化线看：原始 LSTM 解决了“误差能不能长距离传”，遗忘门解决了“记忆什么时候该释放”，peephole connection 又让门可以看 cell state，后来的工程实现把这些计算合并成高效矩阵操作。&lt;/p&gt;
+&lt;p&gt;换句话说，原论文给的是结构原则，现代库给的是工程配方。前者解释为什么，后者负责好用。&lt;/p&gt;
+&lt;h2 id="这篇论文的实验怎么读"&gt;这篇论文的实验怎么读
+&lt;/h2&gt;&lt;p&gt;原文里有一组关于 minimal time lag 的实验，意思是监督信号和关键输入之间隔了多少时间步。普通 RNN 在 lag 变长后很快吃力，LSTM 仍然能学。这里别只看成功率，要看作者如何把问题拆成“短期记忆可以靠普通动态系统，长期信用分配需要特殊路径”。这正是论文最有价值的地方。&lt;/p&gt;
+&lt;p&gt;还有一些任务会加入噪声、干扰符号和延迟输出。它们像是在不断追问：如果有用信息很少、干扰很多、答案很晚才出现，模型能不能保护住那一点线索。LSTM 的 memory cell 正是为这种情形设计的。它不是为了让每个时间步都输出更复杂的表示，而是为了在必要时让某些状态少受打扰地活得更久。&lt;/p&gt;
+&lt;p&gt;读这些实验时，我会把它们当成“机制验证”，而不是今天意义上的综合 benchmark。作者要证明的是一个因果链：梯度路径不好会导致长依赖难学；CEC 改变路径；门控让这条路径可用；于是长间隔任务变得可训练。这个链条讲通了，论文就站住了。&lt;/p&gt;
+&lt;h2 id="今天再看-lstm"&gt;今天再看 LSTM
+&lt;/h2&gt;&lt;p&gt;Transformer 之后，LSTM 在很多 NLP 主线任务里退到了后台，但它没有变成过时知识。在线预测、低延迟语音、时间序列、设备侧模型里，循环结构仍然有自己的位置。更重要的是，LSTM 是理解神经网络优化的好教材。它提醒我们：表达能力只是问题的一半，误差怎么回来同样重要。&lt;/p&gt;
+&lt;p&gt;从这个角度看，LSTM 和 ResNet、Highway Network 有某种精神上的相似。它们都不是单纯堆更多非线性，而是在结构里给信息或梯度留一条更顺的路。区别只是 LSTM 把这条路放在时间维度上，ResNet 把它放在深度维度上。&lt;/p&gt;
+&lt;p&gt;如果要自己实现一次，建议不要从背公式开始，而是先画张计算图：&lt;code&gt;c_t&lt;/code&gt; 是否沿时间直接传递，输入门是否控制写入，输出门是否控制暴露，隐藏状态 &lt;code&gt;h_t&lt;/code&gt; 是否参与下一步外部计算。只要这几条线理清，公式版本稍有不同也不会迷路。&lt;/p&gt;
+&lt;p&gt;LSTM 最耐读的地方，是它把一个经验问题变成结构问题。不是“RNN 不好训，所以换一个更大的网络”，而是问：训练信号到底在哪条路径上坏掉了？这个问题意识，放到今天读任何新模型都不过时。&lt;/p&gt;
+&lt;h2 id="参考文献"&gt;参考文献
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;Sepp Hochreiter, Jürgen Schmidhuber. &lt;a class="link" href="https://gwern.net/doc/ai/nn/rnn/1997-hochreiter.pdf" target="_blank" rel="noopener"
+ &gt;Long Short-Term Memory&lt;/a&gt;. Neural Computation, 1997.&lt;/li&gt;
+&lt;/ul&gt;</description></item><item><title>ResNet：残差连接为什么让网络真正变深</title><link>https://shiliumi.github.io/post/resnet-deep-residual-learning/</link><pubDate>Sat, 06 Jun 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/resnet-deep-residual-learning/</guid><description>&lt;img src="https://shiliumi.github.io/post/resnet-deep-residual-learning/paper-figure.png" alt="Featured image of post ResNet：残差连接为什么让网络真正变深" /&gt;&lt;p&gt;ResNet 这篇论文最容易被一句话讲完：加 shortcut，学残差。可真正读原文，会发现它不是为了发明一个漂亮连接，而是在解决一个非常具体的现象：当普通网络继续加深时，训练误差反而变差。注意，是训练误差，不是测试误差。这就把问题从“过拟合”推向了“优化困难”。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="ResNet 原论文 Figure 2" class="gallery-image" data-flex-basis="502px" data-flex-grow="209" height="315" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://shiliumi.github.io/post/resnet-deep-residual-learning/paper-figure.png" width="660"&gt;&lt;/p&gt;
+&lt;p&gt;图：原论文 Figure 2，展示残差学习的基本块 &lt;code&gt;F(x)+x&lt;/code&gt;。这里直接从论文 PDF 裁取。&lt;/p&gt;
+&lt;h2 id="退化问题和过拟合不是一回事"&gt;退化问题和过拟合不是一回事
+&lt;/h2&gt;&lt;p&gt;论文开头的关键观察，是 deeper plain networks 会出现 degradation problem。按理说，一个更深的网络至少可以模拟较浅网络：新增层学成恒等映射，就不该更差。可实验里，普通堆叠网络变深后训练误差升高。这说明问题不是泛化太差，而是优化器连训练集都拟合不好。&lt;/p&gt;
+&lt;p&gt;这个点非常重要。很多人听到“网络更深效果变差”，下意识会想到过拟合。但过拟合的典型表现是训练误差低、测试误差高；ResNet 关注的是训练误差本身上不去。于是作者提出问题：如果让新增层更容易学到“什么都不改”，深网络是不是就能至少不比浅网络差？&lt;/p&gt;
+&lt;p&gt;残差学习就是这个问题的结构化答案。与其让一组层直接拟合目标映射 &lt;code&gt;H(x)&lt;/code&gt;，不如让它拟合残差 &lt;code&gt;F(x)=H(x)-x&lt;/code&gt;，最后输出 &lt;code&gt;F(x)+x&lt;/code&gt;。当最优映射接近恒等时，网络只要把残差学成接近 0，而不是费力学一个完整恒等函数。&lt;/p&gt;
+&lt;h2 id="figure-2-的小图为什么这么有分量"&gt;Figure 2 的小图为什么这么有分量
+&lt;/h2&gt;&lt;p&gt;原论文 Figure 2 其实很小，但它几乎改变了后来的深度网络设计。输入 &lt;code&gt;x&lt;/code&gt; 分成两路：一路经过若干 weight layer 和 ReLU，得到 &lt;code&gt;F(x)&lt;/code&gt;；另一路直接跳过这些层，以 identity shortcut 的形式加回来，得到 &lt;code&gt;F(x)+x&lt;/code&gt;，再过 ReLU。&lt;/p&gt;
+&lt;p&gt;这里有两个细节值得看。第一，shortcut 在大多数情况下不增加参数，也不增加明显计算量。它不是用更多参数硬解优化，而是改变信息和梯度的路径。第二，输出是相加，不是拼接。拼接会增加通道数，把融合任务留给后续层；相加要求两路在同一表示空间里对齐，更直接地表达“在输入基础上做修正”。&lt;/p&gt;
+&lt;p&gt;如果维度不匹配，论文会使用 projection shortcut 或者用零填充等方式处理。这个地方可以看出作者并不是只讲一个概念，而是认真处理了实际网络里空间尺寸和通道数变化的问题。&lt;/p&gt;
+&lt;h2 id="残差块让梯度有路可走"&gt;残差块让梯度有路可走
+&lt;/h2&gt;&lt;p&gt;从前向看，残差块让网络容易保留已有表示；从反向看，它也让梯度多了一条更直接的路径。误差信号不必完全穿过每一层非线性和权重变换，shortcut 提供了近似直达的通道。这和 LSTM 的常数误差流在精神上有点像：不是让模型更花哨，而是让优化信号别在路上耗尽。&lt;/p&gt;
+&lt;p&gt;不过，ResNet 并不是说主分支不重要。如果所有残差都为 0，网络只是恒等映射。真正的能力来自主分支学到有用修正，shortcut 负责让这些修正叠加得更容易。可以把一个很深的 ResNet 想成一连串小步更新：每个 block 不必重新发明整个表示，只要在已有表示上改一点。&lt;/p&gt;
+&lt;p&gt;这种“增量更新”的视角很耐用。后来 DenseNet、Transformer 残差连接、各种归一化前后结构，都多少继承了这个判断：深网络里，保留一条稳定主干路径非常重要。&lt;/p&gt;
+&lt;h2 id="实验为什么有说服力"&gt;实验为什么有说服力
+&lt;/h2&gt;&lt;p&gt;ResNet 论文的实验设计很干净。作者先比较 plain network 和 residual network，层数包括 18、34、50、101、152。关键对比不是只看 ResNet 多好，而是看同样深度下，plain 网络随着加深出现训练误差退化，而 residual 网络没有。这个对比直接对准论文提出的问题。&lt;/p&gt;
+&lt;p&gt;ImageNet 上，152 层 ResNet 取得了很强结果，而且计算复杂度低于 VGG。CIFAR-10 上，作者还训练了超过 100 层甚至 1000 层的网络，用来展示残差结构对极深网络的影响。不是所有更深配置都绝对更优，但“深度终于可以被有效利用”这件事被证明得很清楚。&lt;/p&gt;
+&lt;p&gt;论文里还有 bottleneck block：用 &lt;code&gt;1x1&lt;/code&gt; 降维、&lt;code&gt;3x3&lt;/code&gt; 卷积、再 &lt;code&gt;1x1&lt;/code&gt; 升维。这让 50 层以上的网络在计算上可承受。这里和 Inception 的 &lt;code&gt;1x1&lt;/code&gt; 降维思想遥相呼应。深网络不仅要解决优化，还要解决计算预算。&lt;/p&gt;
+&lt;h2 id="shortcut-不是简单捷径"&gt;shortcut 不是简单捷径
+&lt;/h2&gt;&lt;p&gt;有人会把 shortcut 理解成“跳过一些层，所以信息更快到达后面”。这个说法没错，但还不够。它真正改变的是函数学习的坐标系。普通堆叠层要直接表示 &lt;code&gt;H(x)&lt;/code&gt;；残差块表示的是相对输入的变化量。对于很多视觉表示来说，逐层做小修正可能比每层重写整个表示更自然。&lt;/p&gt;
+&lt;p&gt;这也解释了为什么残差连接会扩散到几乎所有深层模型里。Transformer 的每个子层外面都有残差，MLP-Mixer、ViT、现代扩散模型 U-Net 里也到处都是残差。只要模型足够深，训练就需要这种稳定路径。&lt;/p&gt;
+&lt;p&gt;当然，残差连接不是万能。后来的研究发现，归一化放在残差前还是后、激活函数位置、初始化尺度，都会影响训练稳定性。ResNet 原论文打开了门，后面还有 pre-activation ResNet 等改进继续修这条路。&lt;/p&gt;
+&lt;h2 id="今天复现时要看哪些细节"&gt;今天复现时要看哪些细节
+&lt;/h2&gt;&lt;p&gt;复现 ResNet 时，第一件事是把 block 写清楚：basic block 用两个 &lt;code&gt;3x3&lt;/code&gt;，bottleneck 用 &lt;code&gt;1x1-3x3-1x1&lt;/code&gt;。第二件事是处理维度变化：当空间下采样或通道数改变时，shortcut 不能直接相加，需要 projection 或者其他对齐方式。第三件事是检查残差相加的位置和激活顺序，不同版本会有差异。&lt;/p&gt;
+&lt;p&gt;如果只是把输入加到输出上，却没有控制好维度和初始化，模型不一定好训。残差结构的价值来自稳定路径，但这条路径也要和主分支尺度匹配。现代框架里这些都封装好了，反而容易让人忘记它们为什么存在。&lt;/p&gt;
+&lt;p&gt;ResNet 最值得带走的不是“加一条线”，而是一个判断：当模型加深后开始训练困难，不要只怪优化器，也要重新设计函数表示方式。把完整映射改写成残差映射，是深度学习史上很漂亮的一次换坐标。&lt;/p&gt;
+&lt;h2 id="参考文献"&gt;参考文献
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun. &lt;a class="link" href="https://arxiv.org/abs/1512.03385" target="_blank" rel="noopener"
+ &gt;Deep Residual Learning for Image Recognition&lt;/a&gt;. CVPR, 2016.&lt;/li&gt;
+&lt;/ul&gt;</description></item><item><title>Transformer：把序列建模交给注意力</title><link>https://shiliumi.github.io/post/transformer-attention-is-all-you-need/</link><pubDate>Sat, 06 Jun 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/transformer-attention-is-all-you-need/</guid><description>&lt;img src="https://shiliumi.github.io/post/transformer-attention-is-all-you-need/paper-figure.png" alt="Featured image of post Transformer：把序列建模交给注意力" /&gt;&lt;p&gt;《Attention Is All You Need》最响的地方当然是标题：不再用 RNN，也不再靠卷积作为主干，而是把序列建模交给注意力。可如果只把它理解成“注意力替代循环”，还不够。论文真正厉害的是把并行计算、长距离依赖、编码器-解码器训练和表示混合，整理成一个可扩展的模块化结构。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Transformer 原论文 Figure 1" class="gallery-image" data-flex-basis="152px" data-flex-grow="63" height="1200" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://shiliumi.github.io/post/transformer-attention-is-all-you-need/paper-figure.png" width="760"&gt;&lt;/p&gt;
+&lt;p&gt;图：原论文 Figure 1，展示 Transformer 的编码器、解码器、残差归一化、多头注意力和前馈层。这里直接从论文 PDF 裁取。&lt;/p&gt;
+&lt;h2 id="为什么作者想摆脱循环"&gt;为什么作者想摆脱循环
+&lt;/h2&gt;&lt;p&gt;机器翻译里的经典 seq2seq 模型通常依赖 RNN 或 LSTM。它们按时间步处理序列，天然适合顺序数据，但也有明显瓶颈：训练难并行，远距离依赖要穿过很多时间步，长句子的表示容易拥挤。注意力机制在 Transformer 之前已经出现，用来让解码器查看源句不同位置；Transformer 的激进之处，是把注意力从辅助机制升成主干。&lt;/p&gt;
+&lt;p&gt;自注意力的直觉很简单：序列里的每个 token 都可以直接看其他 token，根据相关性聚合信息。这样，任意两个位置之间的路径长度很短，不需要像 RNN 那样一步步传。更重要的是，同一层里所有位置的注意力可以并行计算，极大适合 GPU/TPU。&lt;/p&gt;
+&lt;p&gt;这也是论文标题里 “all you need” 的底气来源。作者不是说卷积和循环永远没用，而是在当时的机器翻译任务上证明：只靠注意力、前馈层、残差和位置编码，就能得到更好的质量和更高的训练效率。&lt;/p&gt;
+&lt;h2 id="figure-1左边编码右边解码"&gt;Figure 1：左边编码，右边解码
+&lt;/h2&gt;&lt;p&gt;原论文 Figure 1 左边是 encoder stack，右边是 decoder stack。编码器每层有两个子层：multi-head self-attention 和 position-wise feed-forward network。每个子层外面都有 residual connection 和 layer normalization。解码器多了一个 masked multi-head self-attention，以及一个对编码器输出做注意力的 encoder-decoder attention。&lt;/p&gt;
+&lt;p&gt;图里容易忽略的是 “N×”。论文基本模型堆叠 6 层编码器和 6 层解码器。每层结构相同，但参数不共享。也就是说，Transformer 不是一个单层注意力模块，而是把注意力和前馈网络交替堆叠。注意力负责在 token 之间交换信息，前馈层负责对每个位置做非线性变换。&lt;/p&gt;
+&lt;p&gt;解码器的 mask 很关键。训练翻译时，目标句已知，但模型预测第 t 个词时不能偷看 t 之后的词。masked self-attention 把未来位置遮掉，保持自回归性质。这个小细节后来在 GPT 类模型里成为核心结构。&lt;/p&gt;
+&lt;h2 id="scaled-dot-product-attention-为什么要缩放"&gt;Scaled Dot-Product Attention 为什么要缩放
+&lt;/h2&gt;&lt;p&gt;论文里的注意力公式是 &lt;code&gt;softmax(QK^T / sqrt(d_k))V&lt;/code&gt;。查询 Q 和键 K 做点积，得到每个位置对其他位置的相关性，再用 softmax 转成权重，最后加权求和值 V。除以 &lt;code&gt;sqrt(d_k)&lt;/code&gt; 是为了避免维度变大时点积数值过大，softmax 进入饱和区，梯度变小。&lt;/p&gt;
+&lt;p&gt;这个缩放看似小，却很有工程味。注意力不是抽象相似度就完事，它要在深层网络里稳定训练。维度、初始化、归一化、残差都会影响数值范围。Transformer 能训起来，不是因为注意力概念本身浪漫，而是这些细节一起把数值管住了。&lt;/p&gt;
+&lt;p&gt;多头注意力则把表示空间分成多个 head。每个 head 学一套投影，在不同子空间里计算注意力，最后拼接并线性变换。直觉上，不同 head 可以关注不同关系：局部短语、长距离依赖、语法角色、对齐模式。论文没有神化 head，只是证明多头比单个大头更有效。&lt;/p&gt;
+&lt;h2 id="位置编码补上顺序信息"&gt;位置编码补上顺序信息
+&lt;/h2&gt;&lt;p&gt;纯注意力本身对位置置换不敏感。如果不告诉模型顺序，“我喜欢你”和“你喜欢我”可能只是一袋 token。Transformer 用 positional encoding 把位置信息加到输入 embedding 上。原论文采用正弦余弦位置编码，不同维度对应不同频率。&lt;/p&gt;
+&lt;p&gt;为什么用固定正弦而不是学习位置向量？论文说两者效果接近，但正弦编码可能更容易外推到训练时没见过的长度。今天很多模型使用可学习位置编码、相对位置编码、RoPE 等变体。回头看原文，可以把它理解成第一版简洁方案：让模型知道顺序，但不重新引入循环。&lt;/p&gt;
+&lt;p&gt;这里有个很好的读法：Transformer 去掉了 RNN 的顺序计算，但没有去掉顺序本身。它只是把顺序从计算流程里拿出来，改成输入表示的一部分。&lt;/p&gt;
+&lt;h2 id="实验结果和计算复杂度"&gt;实验结果和计算复杂度
+&lt;/h2&gt;&lt;p&gt;论文在 WMT 2014 英德、英法翻译上取得强结果，同时训练成本更低。这个结果的说服力来自两个方面。第一，BLEU 分数高，说明纯注意力结构不是只适合玩具任务。第二，训练效率明显好，说明并行化优势在大规模任务上能转化为真实收益。&lt;/p&gt;
+&lt;p&gt;论文还比较了 self-attention、recurrent、convolutional 在每层复杂度、并行度和最长路径长度上的差异。自注意力对序列长度 n 的复杂度是 &lt;code&gt;O(n^2 d)&lt;/code&gt;，短中序列很合适，但长序列会贵。这也解释了后来 Longformer、Performer、FlashAttention、稀疏注意力等工作的出现。Transformer 解决了一批问题，也打开了新的计算瓶颈。&lt;/p&gt;
+&lt;p&gt;读实验时不要只看“Transformer 赢了 RNN”。更值得看的是它怎么用结构适配硬件：所有位置并行算注意力，矩阵乘法密集，训练吞吐高。这种硬件友好性，是它后来扩展到大模型的重要原因。&lt;/p&gt;
+&lt;h2 id="今天再看-transformer"&gt;今天再看 Transformer
+&lt;/h2&gt;&lt;p&gt;Transformer 后来成了 NLP、视觉、多模态甚至生成模型的通用骨架，但原论文其实很克制。它解决的是机器翻译里的序列到序列问题，使用 encoder-decoder 结构。后来 BERT 主要继承 encoder，GPT 主要继承 masked decoder，ViT 把 encoder 搬到图像 patch 上。很多分支都能在 Figure 1 里找到源头。&lt;/p&gt;
+&lt;p&gt;复现时，最容易漏掉的是残差、LayerNorm、mask 和位置编码这些“胶水层”。只写一个 attention 函数并不等于实现 Transformer。真正的 Transformer 是注意力、前馈层、残差归一化、dropout、label smoothing、学习率 warmup 一起工作的训练系统。&lt;/p&gt;
+&lt;p&gt;这篇论文之所以耐读，是因为它不只是换了一个模块，而是换了一种序列建模的组织方式。循环把顺序写进计算过程，Transformer 把关系交给注意力，把顺序写进位置表示，把效率交给并行矩阵计算。这个转向，后来影响远远超过机器翻译本身。&lt;/p&gt;
+&lt;h2 id="参考文献"&gt;参考文献
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;Ashish Vaswani et al. &lt;a class="link" href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener"
+ &gt;Attention Is All You Need&lt;/a&gt;. NeurIPS, 2017.&lt;/li&gt;
+&lt;/ul&gt;</description></item><item><title>U-Net：为什么医学图像分割需要一条回来的路</title><link>https://shiliumi.github.io/post/unet-biomedical-segmentation/</link><pubDate>Sat, 06 Jun 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/unet-biomedical-segmentation/</guid><description>&lt;img src="https://shiliumi.github.io/post/unet-biomedical-segmentation/paper-figure.png" alt="Featured image of post U-Net：为什么医学图像分割需要一条回来的路" /&gt;&lt;p&gt;U-Net 论文很短，但信息密度很高。它不是简单把一个分类 CNN 改成分割网络，而是在处理医学图像里特别常见的矛盾：样本少、标注贵、目标边界细，又需要输出像素级结果。Ronneberger、Fischer 和 Brox 的解法，是让网络先向下压缩语义，再把空间细节一路带回来。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="U-Net 原论文 Figure 1" class="gallery-image" data-flex-basis="292px" data-flex-grow="121" height="920" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://shiliumi.github.io/post/unet-biomedical-segmentation/paper-figure.png" srcset="https://shiliumi.github.io/post/unet-biomedical-segmentation/paper-figure_hu_cd1a1af119d9c744.png 800w, https://shiliumi.github.io/post/unet-biomedical-segmentation/paper-figure.png 1120w" width="1120"&gt;&lt;/p&gt;
+&lt;p&gt;图：原论文 Figure 1，展示 U-Net 的收缩路径、扩张路径、copy and crop 连接以及各层通道数。这里直接从论文 PDF 裁取。&lt;/p&gt;
+&lt;h2 id="医学分割为什么难"&gt;医学分割为什么难
+&lt;/h2&gt;&lt;p&gt;自然图像分类只要输出一个类别，模型可以丢掉很多空间细节；医学分割不一样，它要告诉你每个像素属于哪里。细胞边界、器官轮廓、病灶区域，往往差几个像素就会影响结果。更麻烦的是，医学图像标注需要专业知识，数据量通常很小，不像 ImageNet 那样可以靠海量样本硬堆。&lt;/p&gt;
+&lt;p&gt;U-Net 的论文一上来就把问题放在这个语境里：他们希望用很少的训练图像得到准确分割，而且速度要快。传统滑窗方法会围绕每个像素取 patch 做分类，能利用局部上下文，但重复计算严重，速度慢，也难以同时兼顾大范围上下文和精确定位。&lt;/p&gt;
+&lt;p&gt;U-Net 选择 fully convolutional 的路线，让网络一次性输出整张图的分割图。它的关键不是“像素分类”，而是怎样在压缩语义后恢复空间位置。&lt;/p&gt;
+&lt;h2 id="figure-1u-形结构怎么读"&gt;Figure 1：U 形结构怎么读
+&lt;/h2&gt;&lt;p&gt;原论文 Figure 1 很直观：左边是 contracting path，右边是 expansive path。左边反复做 &lt;code&gt;3x3&lt;/code&gt; 卷积和 &lt;code&gt;2x2&lt;/code&gt; max pooling，空间尺寸下降，通道数增加；右边通过 up-convolution 提高空间分辨率，同时通道数减少。看起来像一个编码器-解码器，但真正点睛的是横向的灰色箭头：copy and crop。&lt;/p&gt;
+&lt;p&gt;这些横向连接把左侧高分辨率特征复制到右侧对应层，与上采样后的特征拼接。为什么要这样做？因为下采样带来语义，也会损失边界位置。右侧如果只靠最底部的压缩表示往回恢复，很容易得到模糊边界。跳跃连接把早期层的细节带回来，让解码器在恢复分辨率时有可用的定位信息。&lt;/p&gt;
+&lt;p&gt;注意原始 U-Net 使用的是 valid convolution，不做 padding，所以特征图每经过卷积都会变小。横向连接时需要 crop 左侧特征图，再和右侧拼接。这就是图里 “copy and crop” 的来源。今天很多实现为了方便会使用 same padding，空间尺寸更好对齐；但原论文里的裁剪不是随便写的，它和无填充卷积、边界预测策略有关。&lt;/p&gt;
+&lt;h2 id="跳跃连接和-resnet-的跳跃不是一回事"&gt;跳跃连接和 ResNet 的跳跃不是一回事
+&lt;/h2&gt;&lt;p&gt;U-Net 和 ResNet 都有 skip connection，但含义不同。ResNet 的 shortcut 是相加，目标是让深网络优化更容易，帮助学习残差。U-Net 的横向连接是拼接，目标是把高分辨率空间信息送回解码器。一个偏优化，一个偏定位。&lt;/p&gt;
+&lt;p&gt;这点很容易混淆。U-Net 的左侧浅层特征包含边缘、纹理、局部位置；右侧深层特征包含更抽象的语义。拼接以后，解码器可以同时看到“这像什么”和“它在哪里”。医学分割正需要这两者。只有语义，边界会糊；只有局部纹理，又可能缺少全局判断。&lt;/p&gt;
+&lt;p&gt;后来很多分割模型都继承了这个思想。无论是 U-Net++、Attention U-Net，还是扩散模型里的 U-Net 主干，横向特征融合都成了非常重要的结构套路。&lt;/p&gt;
+&lt;h2 id="数据增强不是配角"&gt;数据增强不是配角
+&lt;/h2&gt;&lt;p&gt;U-Net 原论文特别强调 data augmentation，尤其是 elastic deformation。医学图像样本少，如果只做普通翻转旋转，模型很容易记住训练集。弹性形变更接近生物组织和细胞形态的变化，可以让模型看到更多合理的边界变体。&lt;/p&gt;
+&lt;p&gt;这一点和论文的任务背景紧密相关。U-Net 并不是靠一个结构就解决小样本，它是结构和增强一起工作。收缩路径提供上下文，扩张路径恢复定位，数据增强扩大形变覆盖范围。少了增强，小数据上的泛化会弱很多。&lt;/p&gt;
+&lt;p&gt;论文还使用了加权损失，让相邻细胞之间的边界获得更高权重。因为在细胞分割里，最难的往往不是区分背景和细胞，而是把贴在一起的细胞分开。这个损失设计很实用：它把任务里真正贵的错误显式告诉模型。&lt;/p&gt;
+&lt;h2 id="输出尺寸和-overlap-tile"&gt;输出尺寸和 overlap-tile
+&lt;/h2&gt;&lt;p&gt;原始 U-Net 由于 valid convolution，输出分割图比输入图小。论文提出 overlap-tile strategy：对大图像分块预测，并用重叠区域处理边界。边缘缺少上下文时，还可以用镜像方式补边。这些工程细节经常被教程省略，但它们对医学图像很重要，因为显存有限，整张高分辨率图未必能一次送进网络。&lt;/p&gt;
+&lt;p&gt;如果今天用 same padding 版本 U-Net，很多尺寸麻烦会消失，但也要明白自己改了什么。same padding 让实现更方便，输出尺寸与输入一致；原论文方案则更谨慎地避免边界处无真实上下文的卷积。两者都能用，但读论文时不能把现代简化版倒推回原文。&lt;/p&gt;
+&lt;p&gt;这也是 U-Net 文章耐看的地方：它不仅画了一个 U 形网络，还把如何用少量样本训练、如何处理边界、如何预测大图像这些实际问题放在了一起。&lt;/p&gt;
+&lt;h2 id="实验为什么可信"&gt;实验为什么可信
+&lt;/h2&gt;&lt;p&gt;论文在 ISBI 细胞跟踪/分割相关任务上展示了很强结果。它的说服力不只是指标高，而是模型训练样本很少，却能通过增强和结构设计获得稳定分割。对于医学影像场景，这比在大规模自然图像上拿高分更贴近问题本身。&lt;/p&gt;
+&lt;p&gt;U-Net 还展示了速度优势。相比滑窗方法，fully convolutional 的整图预测避免了大量重复计算。分割任务里，速度不是小事；如果一个模型每个像素都单独跑 patch 分类，即使准确，也很难在真实流程中高效使用。&lt;/p&gt;
+&lt;p&gt;所以读实验时，我会把它拆成三条线：小样本能不能训，边界能不能准，推理能不能快。U-Net 的结构正好同时回应这三条线。&lt;/p&gt;
+&lt;h2 id="今天复现时最容易踩的地方"&gt;今天复现时最容易踩的地方
+&lt;/h2&gt;&lt;p&gt;第一个坑是尺寸。每次下采样和上采样后，特征图能不能对齐？如果使用原论文 valid convolution，就需要 crop；如果使用 same padding，就要确认输出尺寸和边界行为。第二个坑是上采样方式。转置卷积、插值加卷积都能用，但细节会影响棋盘伪影和边界质量。第三个坑是损失函数。医学分割常常类别不平衡，只用普通交叉熵可能不够，Dice loss、加权交叉熵或组合损失要结合任务考虑。&lt;/p&gt;
+&lt;p&gt;U-Net 之所以成为经典，不是因为它复杂，而是因为它把分割任务的矛盾抓得很准：语义需要下采样，定位需要高分辨率；数据少，需要强增强；边界重要，需要损失函数照顾。把这些放在一起看，U 形结构就不是一个漂亮轮廓，而是一套任务驱动的设计。&lt;/p&gt;
+&lt;h2 id="参考文献"&gt;参考文献
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;Olaf Ronneberger, Philipp Fischer, Thomas Brox. &lt;a class="link" href="https://arxiv.org/abs/1505.04597" target="_blank" rel="noopener"
+ &gt;U-Net: Convolutional Networks for Biomedical Image Segmentation&lt;/a&gt;. MICCAI, 2015.&lt;/li&gt;
+&lt;/ul&gt;</description></item><item><title>VGG：把网络做深之前，先把形状做简单</title><link>https://shiliumi.github.io/post/vgg-very-deep-convnets/</link><pubDate>Sat, 06 Jun 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/vgg-very-deep-convnets/</guid><description>&lt;img src="https://shiliumi.github.io/post/vgg-very-deep-convnets/paper-figure.png" alt="Featured image of post VGG：把网络做深之前，先把形状做简单" /&gt;&lt;p&gt;VGG 这篇论文的标题是《Very Deep Convolutional Networks for Large-Scale Image Recognition》。它真正关心的问题很直接：在大规模图像识别里，网络深度到底有多重要？为了把这个问题问干净，Simonyan 和 Zisserman 做了一件很聪明的事：他们把架构形状尽量简化，只系统地增加深度。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="VGG 原论文 Table 1" class="gallery-image" data-flex-basis="236px" data-flex-grow="98" height="1280" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://shiliumi.github.io/post/vgg-very-deep-convnets/paper-figure.png" srcset="https://shiliumi.github.io/post/vgg-very-deep-convnets/paper-figure_hu_86181db2653be00b.png 800w, https://shiliumi.github.io/post/vgg-very-deep-convnets/paper-figure.png 1260w" width="1260"&gt;&lt;/p&gt;
+&lt;p&gt;图：原论文 Table 1 和 Table 2，列出 VGG 各配置的层数、卷积堆叠方式和参数量。这里直接从论文 PDF 裁取。&lt;/p&gt;
+&lt;h2 id="这篇论文不是只提出-vgg-16"&gt;这篇论文不是只提出 VGG-16
+&lt;/h2&gt;&lt;p&gt;很多人提到 VGG，第一反应是 VGG-16 或 VGG-19。但原论文不是只扔出一个模型名字，而是在做一组控制变量实验。Table 1 从配置 A 到 E，层数逐渐增加，输入、卷积核大小、池化方式、全连接头都保持高度一致。这样一来，论文可以更有底气地说：性能变化主要来自深度，而不是某个花哨模块。&lt;/p&gt;
+&lt;p&gt;这个设计在今天仍然值得学。模型论文最怕同时改太多东西，最后不知道到底是谁带来了收益。VGG 的做法近乎朴素：所有卷积都用 &lt;code&gt;3x3&lt;/code&gt;，步幅为 1，padding 保持空间尺寸；每个阶段后用 &lt;code&gt;2x2&lt;/code&gt; max pooling 降采样；通道数从 64 逐步翻到 512；最后接三个全连接层。它像是在搭一把尺子，用来量“深度”这件事本身。&lt;/p&gt;
+&lt;p&gt;也正因为规则，VGG 后来特别适合做迁移学习和特征抽取基线。你很容易知道某个特征图来自第几个 stage，也很容易替换分类头或截取中间层。它不是最高效的网络，却是非常清楚的网络。&lt;/p&gt;
+&lt;h2 id="为什么坚持-3x3"&gt;为什么坚持 &lt;code&gt;3x3&lt;/code&gt;
+&lt;/h2&gt;&lt;p&gt;论文里最关键的论证之一，是用多个小卷积替代单个大卷积。两个连续的 &lt;code&gt;3x3&lt;/code&gt; 卷积拥有 &lt;code&gt;5x5&lt;/code&gt; 的有效感受野，三个连续的 &lt;code&gt;3x3&lt;/code&gt; 卷积拥有 &lt;code&gt;7x7&lt;/code&gt; 的有效感受野。相比直接用 &lt;code&gt;5x5&lt;/code&gt; 或 &lt;code&gt;7x7&lt;/code&gt;，小卷积堆叠有两个好处：参数更少，非线性更多。&lt;/p&gt;
+&lt;p&gt;假设输入输出通道数都是 C，一个 &lt;code&gt;7x7&lt;/code&gt; 卷积需要 &lt;code&gt;49C^2&lt;/code&gt; 参数，而三个 &lt;code&gt;3x3&lt;/code&gt; 只需要 &lt;code&gt;27C^2&lt;/code&gt;。参数少只是第一层收益；更重要的是，中间多插入了两个 ReLU。也就是说，网络不是只扩大感受野，而是在同样感受野内增加了非线性变换的层数。&lt;/p&gt;
+&lt;p&gt;这个论证很漂亮，因为它把“深”从一个模糊形容词变成了可计算的选择。VGG 不是为了深而深，而是在证明：把大卷积分解成小卷积堆叠，可以用更少参数得到更强的表示能力。&lt;/p&gt;
+&lt;h2 id="table-1-怎么读"&gt;Table 1 怎么读
+&lt;/h2&gt;&lt;p&gt;Table 1 是 VGG 论文最值得细看的图。A 是 11 个 weight layers，B 是 13 层，D 是 16 层，E 是 19 层。表格里每一列都是一个网络配置，每个 stage 之间用 maxpool 分开。你会发现作者并没有随意改变通道数和池化位置，而是在同一套骨架上加卷积层。&lt;/p&gt;
+&lt;p&gt;比如配置 D，也就是后来常说的 VGG-16，在每个阶段基本是若干个 &lt;code&gt;conv3-通道数&lt;/code&gt; 的重复。前两段较浅，后面 256 和 512 通道的阶段堆得更密。配置 E 继续在后面加层，形成 VGG-19。Table 2 则提醒我们一个很现实的事实：参数量主要受全连接层影响，A 到 E 从 133M 到 144M，层数增加不少，但参数没有按同样比例暴涨，因为新增的多是小卷积。&lt;/p&gt;
+&lt;p&gt;所以 VGG 的“深”不是靠全连接层堆参数，而是靠卷积层增加特征变换深度。这个区别很重要。AlexNet 后端全连接层很重，VGG 把注意力更多拉回卷积特征本身。&lt;/p&gt;
+&lt;h2 id="实验读法深度带来稳定收益"&gt;实验读法：深度带来稳定收益
+&lt;/h2&gt;&lt;p&gt;论文在 ILSVRC 分类和定位任务上验证不同配置。结果大体支持一个结论：在相同设计原则下，增加深度能明显改善性能。配置 D 和 E 表现最好，说明从 11 层增加到 16/19 层确实带来更强视觉表示。&lt;/p&gt;
+&lt;p&gt;但这里也要读出边界。VGG 能把网络做到 19 层，是因为结构足够规则、初始化和训练策略足够稳定；继续盲目加深并不会自动成功。后来 ResNet 的出现正是因为普通堆叠网络到更深时会遇到退化问题。换句话说，VGG 把“深度有用”推到了新的高度，也顺手暴露了“深度如何继续优化”的下一道门槛。&lt;/p&gt;
+&lt;p&gt;论文的训练细节也很务实。作者使用随机裁剪、尺度抖动、水平翻转，并讨论单尺度和多尺度训练测试。VGG 的结构朴素，但训练并不粗糙。很多人只记得 &lt;code&gt;3x3&lt;/code&gt; 堆叠，容易忽略它同样依赖大规模数据增强和合理的多尺度评估。&lt;/p&gt;
+&lt;h2 id="vgg-的代价也很清楚"&gt;VGG 的代价也很清楚
+&lt;/h2&gt;&lt;p&gt;VGG 的缺点几乎和优点一样明显：参数多，计算重，内存占用高。尤其全连接层让模型体积很大。今天很少有人从头训练原版 VGG 用于生产，因为 ResNet、MobileNet、EfficientNet 等模型在精度、参数量、速度之间更平衡。&lt;/p&gt;
+&lt;p&gt;但这不影响 VGG 的历史价值。它像一块非常干净的实验板，告诉后来研究者：如果你把卷积核统一成小尺寸，把网络做得规整且更深，视觉表示会变强。后续大量工作正是在这个基础上继续追问：能不能更深？能不能更省？能不能更容易优化？&lt;/p&gt;
+&lt;p&gt;从教学角度看，VGG 也很适合当 CNN 的“第二篇论文”。LeNet 让人理解局部连接和权值共享，AlexNet 让人理解大规模训练系统，VGG 则让人第一次真正感受到“深度”作为变量本身的力量。&lt;/p&gt;
+&lt;h2 id="今天复现时该抓住什么"&gt;今天复现时该抓住什么
+&lt;/h2&gt;&lt;p&gt;如果用 PyTorch 复现 VGG，不难写出配置列表，然后循环堆 &lt;code&gt;Conv2d + ReLU&lt;/code&gt; 和 &lt;code&gt;MaxPool2d&lt;/code&gt;。真正要注意的是训练成本。原版 VGG 没有 BatchNorm，训练深网络时更依赖初始化、学习率调度和数据增强。后来很多实现会使用 VGG-BN，这已经不是原论文模型，但训练更顺。&lt;/p&gt;
+&lt;p&gt;另一个值得动手观察的地方，是特征图的空间尺寸和通道数如何变化。从 &lt;code&gt;224x224&lt;/code&gt; 输入开始，每次 maxpool 空间减半，通道逐步增加。这个节奏后来成了 CNN 很常见的骨架：用空间分辨率换语义通道，用局部小卷积不断重组视觉模式。&lt;/p&gt;
+&lt;p&gt;读完 VGG，我会把它概括成一句话：它把复杂设计拿掉，用最规则的方式证明深度有价值。正因为它少了很多花活，结论反而更响亮。&lt;/p&gt;
+&lt;h2 id="参考文献"&gt;参考文献
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;Karen Simonyan, Andrew Zisserman. &lt;a class="link" href="https://arxiv.org/abs/1409.1556" target="_blank" rel="noopener"
+ &gt;Very Deep Convolutional Networks for Large-Scale Image Recognition&lt;/a&gt;. ICLR, 2015.&lt;/li&gt;
+&lt;/ul&gt;</description></item><item><title>Vision Transformer：把图像切成词以后发生了什么</title><link>https://shiliumi.github.io/post/vit-image-patches-transformer/</link><pubDate>Sat, 06 Jun 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/vit-image-patches-transformer/</guid><description>&lt;img src="https://shiliumi.github.io/post/vit-image-patches-transformer/paper-figure.png" alt="Featured image of post Vision Transformer：把图像切成词以后发生了什么" /&gt;&lt;p&gt;Vision Transformer 这篇论文的核心动作非常大胆：把图像切成固定大小 patch，把每个 patch 当成一个 token，然后几乎原封不动地使用 Transformer encoder 做图像分类。它看上去简单，甚至有点“偷懒”，但真正的结论并不简单：当预训练数据足够大时，Transformer 可以在视觉任务上摆脱 CNN 的强归纳偏置。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Vision Transformer 原论文 Figure 1" class="gallery-image" data-flex-basis="340px" data-flex-grow="141" height="860" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://shiliumi.github.io/post/vit-image-patches-transformer/paper-figure.png" srcset="https://shiliumi.github.io/post/vit-image-patches-transformer/paper-figure_hu_caf1e03d9e534d23.png 800w, https://shiliumi.github.io/post/vit-image-patches-transformer/paper-figure.png 1220w" width="1220"&gt;&lt;/p&gt;
+&lt;p&gt;图：原论文 Figure 1，展示 ViT 如何把图像 patch 投影为 token 序列，并送入 Transformer encoder。这里直接从论文 PDF 裁取。&lt;/p&gt;
+&lt;h2 id="为什么这件事当时不算显然"&gt;为什么这件事当时不算显然
+&lt;/h2&gt;&lt;p&gt;在 ViT 之前，CNN 几乎是视觉主干的默认选择。卷积有强归纳偏置：局部连接、权值共享、平移等变性。这些偏置非常适合图像，也让模型在中等规模数据上更容易泛化。Transformer 在 NLP 里很强，但文本 token 天然是一维序列；图像是二维网格，直接套 Transformer 会不会太浪费？会不会因为缺少卷积偏置而学不动？&lt;/p&gt;
+&lt;p&gt;ViT 的答案有条件：如果只在 ImageNet-1k 这样的中等数据上从头训练，ViT 不一定比同规模 CNN 好；但如果在 JFT-300M 这类超大数据上预训练，再迁移到下游视觉任务，ViT 可以达到甚至超过强 CNN。也就是说，论文不是简单宣称“Transformer 比 CNN 强”，而是在说：数据规模足够大时，弱归纳偏置不再一定是劣势。&lt;/p&gt;
+&lt;p&gt;这个结论很重要。CNN 把很多视觉先验写死在结构里，样本效率高；ViT 让模型从数据里学更多结构，早期更吃数据，但扩展性强。&lt;/p&gt;
+&lt;h2 id="figure-1把图像变成序列"&gt;Figure 1：把图像变成序列
+&lt;/h2&gt;&lt;p&gt;原论文 Figure 1 画得很清楚。输入图像被切成固定大小 patch，比如 &lt;code&gt;16x16&lt;/code&gt;。每个 patch 展平后通过线性层投影成 D 维 embedding。然后在序列前加一个可学习的 class token，再加位置编码，送入标准 Transformer encoder。最后取 class token 的输出做分类。&lt;/p&gt;
+&lt;p&gt;这里最关键的不是 Transformer encoder 本身，而是 patch embedding。它相当于把 &lt;code&gt;H x W x C&lt;/code&gt; 的图像变成长度为 &lt;code&gt;N = HW / P^2&lt;/code&gt; 的 token 序列。patch size P 越小，序列越长，空间细节越多，但注意力计算更贵；P 越大，序列更短，计算省，但细粒度信息损失更多。ViT-B/16 里的 &lt;code&gt;/16&lt;/code&gt; 指的就是 patch 大小。&lt;/p&gt;
+&lt;p&gt;class token 则借鉴了 BERT 的 &lt;code&gt;[CLS]&lt;/code&gt;。它不对应某个图像块，而是在多层 self-attention 中聚合全局信息，最后用于分类。位置编码用来告诉模型 patch 的空间位置。没有位置编码，patch 序列就会丢掉二维布局。&lt;/p&gt;
+&lt;h2 id="vit-到底少了什么视觉先验"&gt;ViT 到底少了什么视觉先验
+&lt;/h2&gt;&lt;p&gt;ViT 和 CNN 最大的差异，是它没有把局部性和权值共享写得那么强。CNN 的同一个卷积核会在整张图上滑动，天然偏向局部纹理；ViT 的每个 patch token 经过线性投影后，第一层 self-attention 就可以看到所有 patch。它更自由，但也更需要数据告诉它哪些局部结构可靠。&lt;/p&gt;
+&lt;p&gt;这解释了论文里的一个重要现象：在较小数据集上，ViT 表现不如 ResNet 等 CNN；在大规模预训练后，ViT 的表现明显提升。归纳偏置和数据规模之间有交换关系。强偏置帮助小数据泛化，弱偏置给大数据扩展留下空间。&lt;/p&gt;
+&lt;p&gt;论文还比较了 hybrid 模型，也就是先用 CNN 提取特征，再把特征图切成 token 输入 Transformer。这个方向说明作者并不是把 CNN 一脚踢开，而是在测试不同程度的视觉先验。后来很多模型也沿着混合路线走过一段，比如 ConvStem、Swin Transformer 的局部窗口注意力等。&lt;/p&gt;
+&lt;h2 id="计算代价在哪里"&gt;计算代价在哪里
+&lt;/h2&gt;&lt;p&gt;自注意力的复杂度随 token 数平方增长。对图像来说，如果 patch 太小，token 数会迅速变多。&lt;code&gt;224x224&lt;/code&gt; 图像用 &lt;code&gt;16x16&lt;/code&gt; patch 得到 196 个 patch，加 class token 是 197，计算还可控；如果改成 &lt;code&gt;8x8&lt;/code&gt; patch，token 数会变成 784，注意力成本大幅增加。&lt;/p&gt;
+&lt;p&gt;所以 patch size 是 ViT 里非常关键的旋钮。它不只是分辨率选择，而是在精度和计算之间做交易。论文中的 ViT-B/16、ViT-B/32、ViT-L/16 等命名，都反映了模型规模和 patch 大小的组合。更小 patch 通常更强，但也更贵。&lt;/p&gt;
+&lt;p&gt;这也解释了后续视觉 Transformer 的许多改进：Swin 用窗口注意力降低复杂度，PVT 做金字塔结构，DeiT 研究数据高效训练，MAE 用自监督重建提升预训练效率。ViT 打开了门，但第一版并不解决所有视觉计算问题。&lt;/p&gt;
+&lt;h2 id="实验结论别读反"&gt;实验结论别读反
+&lt;/h2&gt;&lt;p&gt;ViT 论文最容易被读反的一点，是把它当成“CNN 已经没用了”。原文并没有这么简单。作者明确展示，在没有大规模预训练时，ViT 的表现并不一定好；而当预训练数据增大，ViT 的扩展性开始显现。它挑战的是“视觉模型必须依赖卷积主干”这个默认假设，而不是否认卷积在小数据和高效场景里的价值。&lt;/p&gt;
+&lt;p&gt;论文在 ImageNet、CIFAR、VTAB 等任务上报告迁移结果，并比较不同模型大小。真正值得看的趋势是：模型越大、预训练数据越大，ViT 越能发挥。这个趋势后来和大模型时代的经验合流：更通用、更少硬编码偏置的架构，往往在海量数据和算力下更有上限。&lt;/p&gt;
+&lt;p&gt;但这也意味着成本。ViT 的成功条件更依赖预训练资源。对于普通项目，直接从头训练一个 ViT 未必划算，使用预训练权重、蒸馏或更数据高效的变体通常更现实。&lt;/p&gt;
+&lt;h2 id="今天复现时最该动的旋钮"&gt;今天复现时最该动的旋钮
+&lt;/h2&gt;&lt;p&gt;如果自己实现 ViT，最值得观察的是 patch size、embedding dim、depth、heads 和预训练数据。写代码并不难：切 patch、线性投影、加 class token 和位置编码、送入 Transformer encoder。难的是让模型在有限数据上泛化。&lt;/p&gt;
+&lt;p&gt;位置编码在微调高分辨率图像时也要处理。因为 patch 数变了，位置编码长度也变了，通常需要插值。这是很多复现细节里容易漏掉的一步。另一个细节是分类头：预训练时可能用 MLP head，微调时常换成线性头，论文里也提到这种设置差异。&lt;/p&gt;
+&lt;p&gt;ViT 最有启发的地方，是它把图像建模重新表述成序列建模。它没有发明复杂视觉模块，而是问了一个更根本的问题：如果把图像切成 token，标准 Transformer 能走多远？答案是，在足够数据面前，能走得很远。&lt;/p&gt;
+&lt;h2 id="参考文献"&gt;参考文献
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;Alexey Dosovitskiy et al. &lt;a class="link" href="https://arxiv.org/abs/2010.11929" target="_blank" rel="noopener"
+ &gt;An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale&lt;/a&gt;. ICLR, 2021.&lt;/li&gt;
+&lt;/ul&gt;</description></item></channel></rss>

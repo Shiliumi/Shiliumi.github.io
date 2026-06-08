@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>LeNet on 小翟的个人博客</title><link>https://shiliumi.github.io/tags/lenet/</link><description>Recent content in LeNet on 小翟的个人博客</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sun, 07 Jun 2026 14:00:56 +0800</lastBuildDate><atom:link href="https://shiliumi.github.io/tags/lenet/index.xml" rel="self" type="application/rss+xml"/><item><title>LeNet-5：卷积网络最早成熟的工程样子</title><link>https://shiliumi.github.io/post/lenet5-gradient-based-document-recognition/</link><pubDate>Sat, 06 Jun 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/lenet5-gradient-based-document-recognition/</guid><description>&lt;img src="https://shiliumi.github.io/post/lenet5-gradient-based-document-recognition/paper-figure.png" alt="Featured image of post LeNet-5：卷积网络最早成熟的工程样子" /&gt;&lt;p&gt;今天回头读 LeNet-5，最容易误判的一点，是把它当成“一个很小的 CNN”。这样说当然也对，但太薄了。LeCun、Bottou、Bengio 和 Haffner 写的《Gradient-Based Learning Applied to Document Recognition》不是在展示一个课堂网络，而是在回答一个当时很实际的问题：能不能让一个可训练系统直接面对文档图像，从像素开始，把特征、分类、甚至后面的识别流程尽量接在一起。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="LeNet-5 原论文 Figure 2" class="gallery-image" data-flex-basis="619px" data-flex-grow="258" height="620" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://shiliumi.github.io/post/lenet5-gradient-based-document-recognition/paper-figure.png" srcset="https://shiliumi.github.io/post/lenet5-gradient-based-document-recognition/paper-figure_hu_fe4d78925e18458.png 800w, https://shiliumi.github.io/post/lenet5-gradient-based-document-recognition/paper-figure.png 1600w" width="1600"&gt;&lt;/p&gt;
+&lt;p&gt;图：原论文 Figure 2，展示 LeNet-5 从 &lt;code&gt;32x32&lt;/code&gt; 输入到 10 类输出的结构。这里直接从论文 PDF 裁取。&lt;/p&gt;
+&lt;h2 id="先看论文关心的任务"&gt;先看论文关心的任务
+&lt;/h2&gt;&lt;p&gt;这篇论文的标题里有 “Document Recognition”，不只是 “Digit Classification”。如果只拿 MNIST 准确率去理解它，会错过一半以上的背景。作者真正关心的是支票、邮政编码、手写字符这样的文档识别链路。真实文档里，字符并不总是已经被完美切出来；系统要处理候选切分、字符分类、路径搜索和全局打分。LeNet-5 是其中的核心分类器，但论文的野心比分类器更大。&lt;/p&gt;
+&lt;p&gt;在当时，主流思路通常会先做手工特征：笔画、轮廓、投影、几何形状，再把特征交给分类器。LeCun 等人的选择更激进一些：既然特征决定上限，那就把特征提取也交给学习系统。这个想法今天听起来平常，可在样本量、算力和优化工具都有限的年代，它需要很强的结构先验来兜底。&lt;/p&gt;
+&lt;p&gt;卷积网络的先验正好落在字符图像上。笔画是局部的，笔画检测器不应该只在某一个坐标有效；轻微平移不该改变类别；越往后越应该组合出更抽象的局部形状。LeNet-5 不是“没有人工先验”，而是把先验写进网络形状：局部连接、权值共享、下采样、逐层扩大感受野。&lt;/p&gt;
+&lt;h2 id="figure-2-应该怎么读"&gt;Figure 2 应该怎么读
+&lt;/h2&gt;&lt;p&gt;原论文 Figure 2 很值得停下来多看一会儿。输入是 &lt;code&gt;32x32&lt;/code&gt;，这比居中的数字本身更大，因为作者希望最高层特征的感受野中心能覆盖原始字符的关键区域。C1 是 6 个 &lt;code&gt;28x28&lt;/code&gt; 特征图，每个单元看输入上的 &lt;code&gt;5x5&lt;/code&gt; 邻域。S2 把它降到 &lt;code&gt;14x14&lt;/code&gt;，但不是今天常见的固定 max pooling，而是每个下采样单元会把局部输入求和，再乘一个可训练系数、加一个可训练偏置，然后过非线性。&lt;/p&gt;
+&lt;p&gt;C3 是这张图里经常被简化掉的地方。它不是完全连接到 S2 的所有特征图，而是采用部分连接。论文这么做有几个目的：减少参数，打破对称，让不同特征图学习不同组合。今天我们有更强的硬件和更成熟的初始化，不太会手动写这种连接表，但它说明早期网络设计非常在意“哪些自由度值得花参数”。&lt;/p&gt;
+&lt;p&gt;到了 C5，图上写的是 &lt;code&gt;120&lt;/code&gt; 个特征图，不过因为前一层空间尺寸已经很小，C5 实际上很接近全连接层。后面 F6 是 84 个单元，再接 10 类输出。整套网络只有大约 6 万可训练参数，却有大量连接，这个对比是卷积权值共享的直接结果：连接多不等于参数多，同一组权重可以在空间上反复使用。&lt;/p&gt;
+&lt;h2 id="下采样的意义不是压缩图片"&gt;下采样的意义不是压缩图片
+&lt;/h2&gt;&lt;p&gt;如果把 S2、S4 理解成“把图变小”，那就太像图像处理了。论文里下采样更重要的意义，是用很小的空间损失换一点局部不变性。手写数字里的笔画位置有轻微偏移很正常，一个系统如果对每个像素位置都过分敏感，就会把不重要的形变当成类别差异。&lt;/p&gt;
+&lt;p&gt;但 LeNet 的下采样也不是今天的标准池化。它有可训练系数和偏置，说明作者还没有把池化完全固定成一个无参数模块，而是在“保留强响应”和“学习响应尺度”之间找折中。后来 max pooling、average pooling、strided convolution 各自流行过，很多实现也会把 LeNet 简化成普通平均池化或最大池化。复现时可以简化，但读论文时最好知道原始设计并不是那么粗糙。&lt;/p&gt;
+&lt;p&gt;这个细节还提醒我：深度学习里的许多组件不是一开始就以今天的形态出现的。它们往往先以一个带工程味的版本出现，解决一个真实痛点，后来才被更简单、更稳定、更适合硬件的形式替代。&lt;/p&gt;
+&lt;h2 id="端到端不等于没有系统工程"&gt;端到端不等于没有系统工程
+&lt;/h2&gt;&lt;p&gt;这篇论文后半部分讨论 Graph Transformer Networks，用来把字符识别嵌入更大的图结构。这个部分常被只讲 CNN 历史的文章略过，但它其实很能说明作者的思路。LeNet-5 不是孤零零输出一个数字，然后论文就结束了。它被放进一个文档识别系统里，与切分候选、路径搜索、上下文约束一起工作。&lt;/p&gt;
+&lt;p&gt;这和现在很多模型论文的气质不太一样。现在我们习惯把 benchmark 表格当终点；这篇论文更像在说：分类器要能进入业务系统，经受系统级约束。手写支票识别不是把单个数字识别对就完事，前后字符、候选路径、拒识策略都会影响最终结果。LeNet-5 的价值，正是在一个完整场景里被验证出来。&lt;/p&gt;
+&lt;p&gt;所以读这篇时，我不太愿意只说“它提出了卷积网络”。更准确的说法是：它把可训练局部特征提取器放进文档识别工程，并证明这种方式可以替代相当多的手工特征工作。&lt;/p&gt;
+&lt;h2 id="实验数字背后看什么"&gt;实验数字背后看什么
+&lt;/h2&gt;&lt;p&gt;LeNet-5 的准确率今天已经不是惊人的数字，但实验设计仍然有意思。作者比较了多种分类器和训练方式，包括 k-NN、SVM、全连接网络、卷积网络等。真正值得看的不是“谁在某个表格上高一点”，而是卷积结构为什么能在参数受控的同时取得强性能。&lt;/p&gt;
+&lt;p&gt;全连接网络可以有很多参数，但它对位置变化不够友好；手工特征方法可以注入经验，但特征一旦设计错，后面的分类器很难补救；卷积网络介于两者之间，它把“局部性”和“平移共享”作为结构限制，同时允许特征自己学出来。这种限制不是削弱模型，反而让模型少学很多无意义的自由度。&lt;/p&gt;
+&lt;p&gt;论文还强调训练数据预处理和输入规范化。比如输入图像被放进 &lt;code&gt;32x32&lt;/code&gt;，灰度值被规范到特定范围，字符居中但保留边界。这些细节看起来普通，却决定了早期网络能不能稳定工作。今天我们有 BatchNorm、Adam、更大的数据和自动增强，容易低估这些朴素处理的分量。&lt;/p&gt;
+&lt;h2 id="今天复现时别只搭壳"&gt;今天复现时别只搭壳
+&lt;/h2&gt;&lt;p&gt;很多教程里的 LeNet 是两个卷积层加三个全连接层，能跑 MNIST，也够教学。但如果想复现论文思想，至少要额外盯住几件事。第一，输入为什么是 &lt;code&gt;32x32&lt;/code&gt; 而不是刚好包住数字。第二，下采样层在原文中有可训练参数。第三，C3 的部分连接为什么存在。第四，论文并不只关心单字符分类，还关心分类器如何进入文档系统。&lt;/p&gt;
+&lt;p&gt;我会把这些分成两类：今天仍然值得继承的思想，和当年受硬件、样本、实现条件影响的细节。前者包括局部连接、权值共享、下采样获得局部不变性、端到端学习；后者包括具体连接表、特定输出层形式、Graph Transformer Network 的实现方式。分开以后，既不会因为 LeNet 古早就低估它，也不会把 1998 年的每个实现选择都当成今天必须照抄的标准。&lt;/p&gt;
+&lt;p&gt;LeNet-5 最耐看的地方，是它并不靠“大”取胜。它靠的是把问题结构吃透，然后把参数放在最该放的位置。后来的 CNN 越来越深、越来越宽，但这个基本判断没有变：好的网络结构，不只是堆算力，而是在任务里找到可共享、可组合、可泛化的那部分规律。&lt;/p&gt;
+&lt;h2 id="参考文献"&gt;参考文献
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;Yann LeCun, Léon Bottou, Yoshua Bengio, Patrick Haffner. &lt;a class="link" href="https://yann.lecun.com/exdb/publis/pdf/lecun-98.pdf" target="_blank" rel="noopener"
+ &gt;Gradient-Based Learning Applied to Document Recognition&lt;/a&gt;. Proceedings of the IEEE, 1998.&lt;/li&gt;
+&lt;/ul&gt;</description></item></channel></rss>

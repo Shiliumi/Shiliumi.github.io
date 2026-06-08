@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>ResNet on 小翟的个人博客</title><link>https://shiliumi.github.io/tags/resnet/</link><description>Recent content in ResNet on 小翟的个人博客</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sun, 07 Jun 2026 14:00:56 +0800</lastBuildDate><atom:link href="https://shiliumi.github.io/tags/resnet/index.xml" rel="self" type="application/rss+xml"/><item><title>ResNet：残差连接为什么让网络真正变深</title><link>https://shiliumi.github.io/post/resnet-deep-residual-learning/</link><pubDate>Sat, 06 Jun 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/resnet-deep-residual-learning/</guid><description>&lt;img src="https://shiliumi.github.io/post/resnet-deep-residual-learning/paper-figure.png" alt="Featured image of post ResNet：残差连接为什么让网络真正变深" /&gt;&lt;p&gt;ResNet 这篇论文最容易被一句话讲完：加 shortcut，学残差。可真正读原文，会发现它不是为了发明一个漂亮连接，而是在解决一个非常具体的现象：当普通网络继续加深时，训练误差反而变差。注意，是训练误差，不是测试误差。这就把问题从“过拟合”推向了“优化困难”。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="ResNet 原论文 Figure 2" class="gallery-image" data-flex-basis="502px" data-flex-grow="209" height="315" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://shiliumi.github.io/post/resnet-deep-residual-learning/paper-figure.png" width="660"&gt;&lt;/p&gt;
+&lt;p&gt;图：原论文 Figure 2，展示残差学习的基本块 &lt;code&gt;F(x)+x&lt;/code&gt;。这里直接从论文 PDF 裁取。&lt;/p&gt;
+&lt;h2 id="退化问题和过拟合不是一回事"&gt;退化问题和过拟合不是一回事
+&lt;/h2&gt;&lt;p&gt;论文开头的关键观察，是 deeper plain networks 会出现 degradation problem。按理说，一个更深的网络至少可以模拟较浅网络：新增层学成恒等映射，就不该更差。可实验里，普通堆叠网络变深后训练误差升高。这说明问题不是泛化太差，而是优化器连训练集都拟合不好。&lt;/p&gt;
+&lt;p&gt;这个点非常重要。很多人听到“网络更深效果变差”，下意识会想到过拟合。但过拟合的典型表现是训练误差低、测试误差高；ResNet 关注的是训练误差本身上不去。于是作者提出问题：如果让新增层更容易学到“什么都不改”，深网络是不是就能至少不比浅网络差？&lt;/p&gt;
+&lt;p&gt;残差学习就是这个问题的结构化答案。与其让一组层直接拟合目标映射 &lt;code&gt;H(x)&lt;/code&gt;，不如让它拟合残差 &lt;code&gt;F(x)=H(x)-x&lt;/code&gt;，最后输出 &lt;code&gt;F(x)+x&lt;/code&gt;。当最优映射接近恒等时，网络只要把残差学成接近 0，而不是费力学一个完整恒等函数。&lt;/p&gt;
+&lt;h2 id="figure-2-的小图为什么这么有分量"&gt;Figure 2 的小图为什么这么有分量
+&lt;/h2&gt;&lt;p&gt;原论文 Figure 2 其实很小，但它几乎改变了后来的深度网络设计。输入 &lt;code&gt;x&lt;/code&gt; 分成两路：一路经过若干 weight layer 和 ReLU，得到 &lt;code&gt;F(x)&lt;/code&gt;；另一路直接跳过这些层，以 identity shortcut 的形式加回来，得到 &lt;code&gt;F(x)+x&lt;/code&gt;，再过 ReLU。&lt;/p&gt;
+&lt;p&gt;这里有两个细节值得看。第一，shortcut 在大多数情况下不增加参数，也不增加明显计算量。它不是用更多参数硬解优化，而是改变信息和梯度的路径。第二，输出是相加，不是拼接。拼接会增加通道数，把融合任务留给后续层；相加要求两路在同一表示空间里对齐，更直接地表达“在输入基础上做修正”。&lt;/p&gt;
+&lt;p&gt;如果维度不匹配，论文会使用 projection shortcut 或者用零填充等方式处理。这个地方可以看出作者并不是只讲一个概念，而是认真处理了实际网络里空间尺寸和通道数变化的问题。&lt;/p&gt;
+&lt;h2 id="残差块让梯度有路可走"&gt;残差块让梯度有路可走
+&lt;/h2&gt;&lt;p&gt;从前向看，残差块让网络容易保留已有表示；从反向看，它也让梯度多了一条更直接的路径。误差信号不必完全穿过每一层非线性和权重变换，shortcut 提供了近似直达的通道。这和 LSTM 的常数误差流在精神上有点像：不是让模型更花哨，而是让优化信号别在路上耗尽。&lt;/p&gt;
+&lt;p&gt;不过，ResNet 并不是说主分支不重要。如果所有残差都为 0，网络只是恒等映射。真正的能力来自主分支学到有用修正，shortcut 负责让这些修正叠加得更容易。可以把一个很深的 ResNet 想成一连串小步更新：每个 block 不必重新发明整个表示，只要在已有表示上改一点。&lt;/p&gt;
+&lt;p&gt;这种“增量更新”的视角很耐用。后来 DenseNet、Transformer 残差连接、各种归一化前后结构，都多少继承了这个判断：深网络里，保留一条稳定主干路径非常重要。&lt;/p&gt;
+&lt;h2 id="实验为什么有说服力"&gt;实验为什么有说服力
+&lt;/h2&gt;&lt;p&gt;ResNet 论文的实验设计很干净。作者先比较 plain network 和 residual network，层数包括 18、34、50、101、152。关键对比不是只看 ResNet 多好，而是看同样深度下，plain 网络随着加深出现训练误差退化，而 residual 网络没有。这个对比直接对准论文提出的问题。&lt;/p&gt;
+&lt;p&gt;ImageNet 上，152 层 ResNet 取得了很强结果，而且计算复杂度低于 VGG。CIFAR-10 上，作者还训练了超过 100 层甚至 1000 层的网络，用来展示残差结构对极深网络的影响。不是所有更深配置都绝对更优，但“深度终于可以被有效利用”这件事被证明得很清楚。&lt;/p&gt;
+&lt;p&gt;论文里还有 bottleneck block：用 &lt;code&gt;1x1&lt;/code&gt; 降维、&lt;code&gt;3x3&lt;/code&gt; 卷积、再 &lt;code&gt;1x1&lt;/code&gt; 升维。这让 50 层以上的网络在计算上可承受。这里和 Inception 的 &lt;code&gt;1x1&lt;/code&gt; 降维思想遥相呼应。深网络不仅要解决优化，还要解决计算预算。&lt;/p&gt;
+&lt;h2 id="shortcut-不是简单捷径"&gt;shortcut 不是简单捷径
+&lt;/h2&gt;&lt;p&gt;有人会把 shortcut 理解成“跳过一些层，所以信息更快到达后面”。这个说法没错，但还不够。它真正改变的是函数学习的坐标系。普通堆叠层要直接表示 &lt;code&gt;H(x)&lt;/code&gt;；残差块表示的是相对输入的变化量。对于很多视觉表示来说，逐层做小修正可能比每层重写整个表示更自然。&lt;/p&gt;
+&lt;p&gt;这也解释了为什么残差连接会扩散到几乎所有深层模型里。Transformer 的每个子层外面都有残差，MLP-Mixer、ViT、现代扩散模型 U-Net 里也到处都是残差。只要模型足够深，训练就需要这种稳定路径。&lt;/p&gt;
+&lt;p&gt;当然，残差连接不是万能。后来的研究发现，归一化放在残差前还是后、激活函数位置、初始化尺度，都会影响训练稳定性。ResNet 原论文打开了门，后面还有 pre-activation ResNet 等改进继续修这条路。&lt;/p&gt;
+&lt;h2 id="今天复现时要看哪些细节"&gt;今天复现时要看哪些细节
+&lt;/h2&gt;&lt;p&gt;复现 ResNet 时，第一件事是把 block 写清楚：basic block 用两个 &lt;code&gt;3x3&lt;/code&gt;，bottleneck 用 &lt;code&gt;1x1-3x3-1x1&lt;/code&gt;。第二件事是处理维度变化：当空间下采样或通道数改变时，shortcut 不能直接相加，需要 projection 或者其他对齐方式。第三件事是检查残差相加的位置和激活顺序，不同版本会有差异。&lt;/p&gt;
+&lt;p&gt;如果只是把输入加到输出上，却没有控制好维度和初始化，模型不一定好训。残差结构的价值来自稳定路径，但这条路径也要和主分支尺度匹配。现代框架里这些都封装好了，反而容易让人忘记它们为什么存在。&lt;/p&gt;
+&lt;p&gt;ResNet 最值得带走的不是“加一条线”，而是一个判断：当模型加深后开始训练困难，不要只怪优化器，也要重新设计函数表示方式。把完整映射改写成残差映射，是深度学习史上很漂亮的一次换坐标。&lt;/p&gt;
+&lt;h2 id="参考文献"&gt;参考文献
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun. &lt;a class="link" href="https://arxiv.org/abs/1512.03385" target="_blank" rel="noopener"
+ &gt;Deep Residual Learning for Image Recognition&lt;/a&gt;. CVPR, 2016.&lt;/li&gt;
+&lt;/ul&gt;</description></item></channel></rss>

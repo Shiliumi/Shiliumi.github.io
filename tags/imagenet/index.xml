@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>ImageNet on 小翟的个人博客</title><link>https://shiliumi.github.io/tags/imagenet/</link><description>Recent content in ImageNet on 小翟的个人博客</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><lastBuildDate>Sun, 07 Jun 2026 14:00:56 +0800</lastBuildDate><atom:link href="https://shiliumi.github.io/tags/imagenet/index.xml" rel="self" type="application/rss+xml"/><item><title>AlexNet：ImageNet 时代深度卷积网络的起点</title><link>https://shiliumi.github.io/post/alexnet-imagenet-cnn/</link><pubDate>Sat, 06 Jun 2026 00:00:00 +0000</pubDate><guid>https://shiliumi.github.io/post/alexnet-imagenet-cnn/</guid><description>&lt;img src="https://shiliumi.github.io/post/alexnet-imagenet-cnn/paper-figure.png" alt="Featured image of post AlexNet：ImageNet 时代深度卷积网络的起点" /&gt;&lt;p&gt;AlexNet 经常被一句话概括：2012 年在 ImageNet 上把 CNN 带回舞台中央。这个说法没错，但读原文会发现，胜利不是来自某一个神奇模块。它更像一组条件同时成熟：ImageNet 提供足够大的数据，GPU 让大模型训练变得可承受，ReLU 让优化速度上来，数据增强和 dropout 又把过拟合压住。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="AlexNet 原论文 Figure 2" class="gallery-image" data-flex-basis="503px" data-flex-grow="209" height="610" loading="lazy" sizes="(max-width: 767px) calc(100vw - 30px), (max-width: 1023px) 700px, (max-width: 1279px) 950px, 1232px" src="https://shiliumi.github.io/post/alexnet-imagenet-cnn/paper-figure.png" srcset="https://shiliumi.github.io/post/alexnet-imagenet-cnn/paper-figure_hu_f12e11c6f6f1eb45.png 800w, https://shiliumi.github.io/post/alexnet-imagenet-cnn/paper-figure.png 1280w" width="1280"&gt;&lt;/p&gt;
+&lt;p&gt;图：原论文 Figure 2，展示 AlexNet 的双 GPU 划分、卷积层、池化层和全连接层。这里直接从论文 PDF 裁取。&lt;/p&gt;
+&lt;h2 id="先把-2012-年的背景放回来"&gt;先把 2012 年的背景放回来
+&lt;/h2&gt;&lt;p&gt;今天看 AlexNet 的“五个卷积层加三个全连接层”，很容易觉得它并不深。可是放回 2012 年，ImageNet 分类是另一种规模：一百多万训练图像，一千个类别，图片变化极大。传统视觉方法仍然很依赖手工特征，比如 SIFT、HOG、BoVW 之类的管线。CNN 在 MNIST 这类任务上早有成功，但能不能扛住自然图像的大规模分类，还没有被这样强力地证明过。&lt;/p&gt;
+&lt;p&gt;AlexNet 的论文语气很工程。作者并没有试图把每个组件包装成全新理论，而是把一堆当时可用的东西拼成一个能跑赢比赛的系统。这里的“拼”不是贬义。真实突破经常就是这样：算法、数据、硬件、实现细节一起过了某个临界点。&lt;/p&gt;
+&lt;p&gt;论文里的网络被拆到两块 GPU 上训练，Figure 2 上半部分和下半部分分别对应两个 GPU 的职责。某些卷积层只和同一 GPU 上的特征图连接，某些层会跨 GPU 通信。这不是为了提出优雅的并行范式，而是因为当时显存和算力都卡得很紧。读架构图时要记住，模型形状的一部分是被硬件“挤”出来的。&lt;/p&gt;
+&lt;h2 id="figure-2-不是普通网络框图"&gt;Figure 2 不是普通网络框图
+&lt;/h2&gt;&lt;p&gt;Figure 2 里输入是 &lt;code&gt;224x224x3&lt;/code&gt;，第一层使用较大的 &lt;code&gt;11x11&lt;/code&gt; 卷积核和 stride 4，把空间分辨率迅速降下来。后面接 max pooling，再进入第二层、第三层、第四层、第五层卷积。最后是两个 4096 维全连接层和 1000 类 softmax。图里还标出了每层神经元数量，以及哪些层被拆到两个 GPU 上。&lt;/p&gt;
+&lt;p&gt;这张图有两个很强的时代特征。第一，前端卷积核很大，降采样很猛。后来 VGG、ResNet 会更多使用 &lt;code&gt;3x3&lt;/code&gt; 小卷积，但 AlexNet 还保留了早期视觉网络“先用大窗口扫一遍”的味道。第二，全连接层非常重，参数主要堆在后端。今天我们常用 global average pooling 或更轻的分类头，AlexNet 的后端看起来就显得奢侈。&lt;/p&gt;
+&lt;p&gt;不过正是这些“旧”细节，让它适合阅读。它展示了一个过渡时代：CNN 已经从手写数字走向自然图像，但还没有进入后来那种高度规整、批归一化、残差堆叠的阶段。&lt;/p&gt;
+&lt;h2 id="relu-的贡献不能只说成非线性"&gt;ReLU 的贡献不能只说成“非线性”
+&lt;/h2&gt;&lt;p&gt;论文特别强调 ReLU 让训练快很多。这里的快不只是单步计算便宜，更关键是优化过程顺。tanh 和 sigmoid 在饱和区梯度很小，网络深一点后，很多单元会学得很慢。ReLU 在正半轴保留线性梯度，让大网络更容易从随机初始化往有效方向移动。&lt;/p&gt;
+&lt;p&gt;作者做了对比实验，说明使用 ReLU 的网络达到同样训练误差所需的迭代次数少得多。这一点在当时很重要。ImageNet 训练不是玩具实验，如果一个模型理论上能收敛但训练时间过长，它在工程上就等于不可用。ReLU 的价值，正是把“可表达”往“可训练”推了一大步。&lt;/p&gt;
+&lt;p&gt;当然，ReLU 也不是完美组件。负半轴归零会带来死亡单元问题，后来 Leaky ReLU、PReLU、GELU 等激活函数各有改进。但在 AlexNet 这篇论文里，ReLU 的意义非常清楚：让深一点的 CNN 真正训得动。&lt;/p&gt;
+&lt;h2 id="数据增强和-dropout-是大模型的另一半"&gt;数据增强和 dropout 是大模型的另一半
+&lt;/h2&gt;&lt;p&gt;AlexNet 有 6000 万参数，过拟合风险很高。论文没有回避这一点，而是用了两套重要手段。第一是数据增强：从 &lt;code&gt;256x256&lt;/code&gt; 图像里随机裁剪 &lt;code&gt;224x224&lt;/code&gt; patch，水平翻转，并做 PCA 颜色扰动。第二是 dropout，主要用在全连接层，减少神经元之间过强的共适应。&lt;/p&gt;
+&lt;p&gt;这里特别值得注意的是数据增强的实现。作者把裁剪和颜色扰动安排在 CPU 上生成，让 GPU 在训练上一批时，CPU 准备下一批，几乎不额外拖慢训练。这个细节很像系统工程，而不是单纯算法设计。AlexNet 的成功不是“网络结构一画就赢”，而是训练流水线也跟上了。&lt;/p&gt;
+&lt;p&gt;dropout 的使用也很关键。没有 dropout，全连接层很容易记住训练集；加上 dropout 后，模型不能过度依赖某些特定神经元组合。论文里说 dropout 大约让训练时间翻倍，但收益足够明显。今天我们有 BatchNorm、权重衰减、数据增强家族、Mixup、CutMix，dropout 在 CNN 里的地位没当年那么高，但在 AlexNet 的语境里，它就是让大参数模型站住的支柱之一。&lt;/p&gt;
+&lt;h2 id="lrn-是一个有时代痕迹的组件"&gt;LRN 是一个有时代痕迹的组件
+&lt;/h2&gt;&lt;p&gt;论文还使用了 Local Response Normalization。现在复现 AlexNet 时，这个模块常被省掉，因为 BatchNorm 后来几乎替代了它在 CNN 训练中的位置。读原文时，不必把 LRN 当成永恒组件。它更像当时对神经元竞争和响应归一化的一次尝试，帮助模型在没有 BatchNorm 的条件下更稳定。&lt;/p&gt;
+&lt;p&gt;这类组件很有阅读价值，因为它提醒我们不要把模型历史写成一条直线。很多东西曾经有效，后来退场，并不是它们“错了”，而是新的训练方法、硬件条件和网络结构改变了它们的位置。读 AlexNet，要读出哪些思想留下来了，哪些部件只是那个阶段的脚手架。&lt;/p&gt;
+&lt;h2 id="实验表格真正说明了什么"&gt;实验表格真正说明了什么
+&lt;/h2&gt;&lt;p&gt;AlexNet 在 ILSVRC-2012 上的 top-5 error 明显低于传统方法，这是历史节点。但如果只记冠军数字，会把论文读窄。更重要的是，作者通过消融和对比说明：ReLU、数据增强、dropout、模型规模、GPU 训练一起构成了结果。少一个环节，系统就会变弱。&lt;/p&gt;
+&lt;p&gt;论文还报告了在多个 test crops 上平均预测的方式。测试时从图像中取多个裁剪和翻转，把预测平均。这种 test-time augmentation 今天看起来很常见，但它也体现了 AlexNet 的风格：为了把视觉变化纳入模型判断，训练和测试两边都在制造更稳的视角。&lt;/p&gt;
+&lt;p&gt;我读这篇时会把它看成“深度视觉系统论文”，而不是单个架构论文。它告诉我们，大模型要赢，往往需要三件事同时发生：数据规模支撑表达能力，硬件支撑训练成本，正则化支撑泛化。&lt;/p&gt;
+&lt;h2 id="今天复现时该保留什么"&gt;今天复现时该保留什么
+&lt;/h2&gt;&lt;p&gt;如果只是为了在小数据上跑一个 AlexNet 外形，很多细节都可以简化。但如果想复现论文精神，建议至少保留几件事：较大的第一层卷积和快速降采样，ReLU 替代饱和激活函数，强数据增强，dropout 抑制全连接层过拟合，以及对训练硬件条件的意识。&lt;/p&gt;
+&lt;p&gt;双 GPU 切分今天不必照抄。它是当时条件下的工程解，不是架构美学。LRN 也可以作为历史组件理解，而不必强行保留。真正应该带走的是 AlexNet 的组合判断：CNN 并不是因为某个单点技巧突然赢了 ImageNet，而是因为整个训练系统终于足够强。&lt;/p&gt;
+&lt;p&gt;这也是 AlexNet 读起来很有劲的地方。它不像后来一些论文那样有一个极简公式或优雅定理，但它把一批看似普通的工程选择组织成了一个改变视觉研究方向的结果。很多时候，历史拐点就是这样出现的：不是单个按钮，而是一整排开关同时拨到了正确位置。&lt;/p&gt;
+&lt;h2 id="参考文献"&gt;参考文献
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;Alex Krizhevsky, Ilya Sutskever, Geoffrey E. Hinton. &lt;a class="link" href="https://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks" target="_blank" rel="noopener"
+ &gt;ImageNet Classification with Deep Convolutional Neural Networks&lt;/a&gt;. NeurIPS, 2012.&lt;/li&gt;
+&lt;/ul&gt;</description></item></channel></rss>
